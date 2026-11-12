@@ -36,8 +36,97 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#4a6b5f!import
 .auth-switch{text-align:center;margin-top:16px;font-size:13px;color:#727c77}
 .auth-switch a{color:#4a6b5f;cursor:pointer;text-decoration:underline;font-weight:500}
 
-.app-header{background:#26312d;color:#e8ede9;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.app-header .brand{display:flex;align-items:center;gap:12px}
+.app-header {
+  background: #1a221f;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 70px;
+  border-bottom: 3px solid #b59410;
+}
+.app-header .brand img {
+  height: 40px; /* حجم اللوقو */
+  width: auto;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+/* معلومات المستخدم */
+.user-info { display: flex; align-items: center; gap: 16px; font-size: 13px; }
+.user-info .name { font-weight: 600; color: #fff; }
+.user-info .role { font-size: 11px; color: #a2b3a8; margin-top: 2px; }
+
+/* الأزرار */
+.signout-btn, .lang-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #dfe8e3; border-radius: 7px; padding: 6px 12px; font-size: 12px; cursor: pointer; transition: all 0.2s;
+}
+.signout-btn:hover, .lang-toggle:hover { 
+  background: rgba(255, 255, 255, 0.15); 
+  border-color: #b59410; 
+  color: #fff; 
+}
+.lang-toggle { font-weight: 600; min-width: 42px; }
+
+/* تعديل باقي العناصر */
+.user-info { display: flex; align-items: center; gap: 14px; font-size: 13px; }
+.user-info .name { font-weight: 600; color: #fff; }
+.user-info .role { font-size: 11px; color: #a2b3a8; }
+.signout-btn, .lang-toggle { background: transparent; border: 1px solid rgba(255, 255, 255, 0.15); color: #dfe8e3; border-radius: 7px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+.signout-btn:hover, .lang-toggle:hover { background: rgba(255, 255, 255, 0.06); }
+.lang-toggle { font-weight: 600; min-width: 42px; }
+.app-nav{background:#2a3631;padding:8px 20px;display:flex;gap:4px;flex-wrap:wrap;overflow-x:auto}
+.nav-btn{background:transparent;color:#9aa8a2;border:0;padding:8px 14px;border-radius:7px;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.nav-btn:hover{background:rgba(255,255,255,.05);color:#e8ede9}
+.nav-btn.active{background:rgba(255,255,255,.12);color:#fff;font-weight:500}
+.nav-badge{background:#9a5750;color:#fff;border-radius:10px;padding:1px 6px;font-size:10.5px;font-weight:600;margin-inline-start:4px}
+
+/* معلومات المستخدم والأزرار في الشريط */
+.user-info{display:flex;align-items:center;gap:14px;font-size:13px}
+.user-info .name{font-weight:600;color:#fff}
+.user-info .role{font-size:11px;color:#829588}
+.signout-btn,.lang-toggle{background:transparent;border:1px solid rgba(255,255,255,.15);color:#dfe8e3;border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer}
+.signout-btn:hover,.lang-toggle:hover{background:rgba(255,255,255,.06)}
+.lang-toggle{font-weight:600;min-width:42px}
+
+.user-info { display: flex; align-items: center; gap: 16px; font-size: 13px; }
+.user-info .name { font-weight: 600; color: #fff; }
+.user-info .role { font-size: 11px; color: #829588; }
+
+.signout-btn, .lang-toggle {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #dfe8e3;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.signout-btn:hover, .lang-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* تعديل ألوان بيانات المستخدم والأزرار لتكون مقروءة على الخلفية الذهبية */
+.user-info { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.user-info .name { font-weight: 700; color: #2b2000; }
+.user-info .role { font-size: 11px; color: #5a4800; }
+
+.signout-btn, .lang-toggle {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(58, 44, 0, 0.4);
+  color: #2b2000;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.signout-btn:hover, .lang-toggle:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
 .app-nav{background:#2a3631;padding:8px 20px;display:flex;gap:4px;flex-wrap:wrap;overflow-x:auto}
 .nav-btn{background:transparent;color:#9aa8a2;border:0;padding:8px 14px;border-radius:7px;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .nav-btn:hover{background:rgba(255,255,255,.05);color:#e8ede9}
@@ -693,38 +782,36 @@ function updateStaticTexts() {
   const signoutBtn = document.getElementById('signoutBtn'); if (signoutBtn) signoutBtn.textContent = t('logout');
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   🎨 اللوقو
-   ═══════════════════════════════════════════════════════════════ */
+
 const LOGO_CONFIG = {
-  imageUrl: '',
+  imageUrl: 'logo.png',
   name: 'أسطول',
   nameEn: 'Fleet',
-  subtitle: 'FLEET MANAGEMENT'
+  subtitle: 'FLEET MANAGEMENT',
+  title: 'Applonia Holding Group',
+  desc: 'Company Vehicle Management System'
 };
 
+
 function renderLogo(size) {
-  size = size || 'md';
-  const heights = { sm: 36, md: 42, lg: 48 };
-  const h = heights[size] || 42;
-  const name = currentLang === 'ar' ? LOGO_CONFIG.name : LOGO_CONFIG.nameEn;
-
-  if (LOGO_CONFIG.imageUrl && LOGO_CONFIG.imageUrl.trim()) {
-    return `<div style="display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,#2a3631,#33423c);border-radius:10px;padding:8px 16px;min-height:${h+16}px">
-      <img src="${esc(LOGO_CONFIG.imageUrl)}" alt="${esc(name)}" style="max-width:100%;max-height:${h}px;object-fit:contain;display:block">
-    </div>`;
+  const isHeader = size === 'sm';
+  const h = isHeader ? 40 : 70; // في الهيدر 40، وفي تسجيل الدخول 70
+  
+  if (LOGO_CONFIG.imageUrl) {
+    if (isHeader) {
+      // الشريط العلوي: بدون أي خلفيات بيضاء، فقط الصورة النقية
+      return `<img src="${LOGO_CONFIG.imageUrl}" style="height:${h}px; width:auto; object-fit:contain;">`;
+    } else {
+      // شاشة الدخول: مع النص
+      return `<div style="text-align:center;">
+        <img src="${LOGO_CONFIG.imageUrl}" style="height:${h}px; width:auto; object-fit:contain; margin-bottom:10px;">
+        <div style="font-size:16px; font-weight:800; color:#4a3b10;">${LOGO_CONFIG.title || ''}</div>
+        <div style="font-size:12px; color:#7c5a20;">${LOGO_CONFIG.desc || ''}</div>
+      </div>`;
+    }
   }
-  return `<div style="display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#2a3631,#33423c);border-radius:10px;padding:10px 16px;min-height:${h+10}px">
-    <div style="width:${h-4}px;height:${h-4}px;border-radius:10px;background:#3f544b;color:#d7e0da;display:grid;place-items:center">
-      <svg width="${h-20}" height="${h-20}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="1" y="6" width="14" height="11" rx="2"/><path d="M15 9h3.5l3.5 3.5V17H15z"/><circle cx="5.5" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>
-    </div>
-    <div style="display:flex;flex-direction:column;line-height:1.15">
-      <span style="color:#eef2ef;font-size:17px;font-weight:800">${esc(name)}</span>
-      <span style="color:#829588;font-size:10px;letter-spacing:.5px">${esc(LOGO_CONFIG.subtitle)}</span>
-    </div>
-  </div>`;
+  return `<span style="font-weight:bold; color:white;">${LOGO_CONFIG.name}</span>`;
 }
-
 /* ═══════════════════════════════════════════════════════════════
    ⚙️ Supabase
    ═══════════════════════════════════════════════════════════════ */
@@ -1974,8 +2061,15 @@ function attachAuthListeners() {
   updateAuthTexts();
 
   // Logo
-  const authLogo = $('#authLogo'); if (authLogo) authLogo.innerHTML = renderLogo('lg');
-  const headerLogo = $('#headerLogo'); if (headerLogo) headerLogo.innerHTML = renderLogo('md');
+  // Logo
+    // Logo
+  const authLogo = $('#authLogo'); 
+  if (authLogo) authLogo.innerHTML = renderLogo('lg'); // لشاشة الدخول
+  
+  const headerLogo = $('#headerLogo'); 
+  if (headerLogo) headerLogo.innerHTML = renderLogo('sm'); // للشريط العلوي
+  
+  
 
   // Supabase
   if (!window.supabase || typeof window.supabase.createClient !== 'function') {
