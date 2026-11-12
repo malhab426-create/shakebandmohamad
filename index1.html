@@ -1,0 +1,2660 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>أسطول — Fleet Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#f4f5f3;color:#2c3531;font-size:15px;line-height:1.7}
+html[dir="rtl"] body{font-family:'Tajawal',system-ui,sans-serif}
+html[dir="ltr"] body{font-family:'Inter',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+h1,h2,h3,h4,p{margin:0}
+input,select,textarea{font-family:inherit;font-size:13.5px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#4a6b5f!important;box-shadow:0 0 0 3px rgba(74,107,95,.12)}
+.hidden{display:none!important}
+.ico{display:inline-block;vertical-align:middle;flex:0 0 auto}
+
+#authScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#eef2ef 0%,#f4f5f3 70%);z-index:1000;padding:20px;overflow-y:auto}
+.auth-card{background:#fff;border:1px solid #e6e8e4;border-radius:14px;padding:30px;width:100%;max-width:440px;box-shadow:0 20px 50px -25px rgba(38,49,45,.3);position:relative}
+.lang-btn{position:absolute;top:14px;inset-inline-end:14px;background:#f0f3ef;border:1px solid #e6e8e4;border-radius:7px;padding:5px 12px;font-size:12px;color:#4a6b5f;font-weight:600;cursor:pointer}
+.lang-btn:hover{background:#e8ede9}
+.auth-logo{margin-bottom:24px;display:flex;justify-content:center}
+.auth-title{font-size:22px;font-weight:700;text-align:center;margin-bottom:4px}
+.auth-subtitle{font-size:13px;color:#727c77;text-align:center;margin-bottom:24px}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:12.5px;color:#727c77;margin-bottom:5px;font-weight:500}
+.auth-field input{width:100%;border:1px solid #e6e8e4;border-radius:8px;padding:10px 12px;font-size:14px;background:#fff;color:#2c3531}
+#authError{display:none;background:#fdecea;color:#9a5750;border:1px solid #f5c6cb;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px;line-height:1.6;white-space:pre-line}
+#authDiag{font-size:12.5px;margin-bottom:14px}
+.auth-btn{width:100%;border:0;border-radius:8px;padding:12px;font-size:15px;font-weight:500;background:#4a6b5f;color:#fff;transition:background .15s}
+.auth-btn:hover:not(:disabled){background:#3a564b}
+.auth-btn:disabled{opacity:.6;cursor:not-allowed}
+.auth-switch{text-align:center;margin-top:16px;font-size:13px;color:#727c77}
+.auth-switch a{color:#4a6b5f;cursor:pointer;text-decoration:underline;font-weight:500}
+
+.app-header{background:#26312d;color:#e8ede9;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.app-header .brand{display:flex;align-items:center;gap:12px}
+.app-nav{background:#2a3631;padding:8px 20px;display:flex;gap:4px;flex-wrap:wrap;overflow-x:auto}
+.nav-btn{background:transparent;color:#9aa8a2;border:0;padding:8px 14px;border-radius:7px;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.nav-btn:hover{background:rgba(255,255,255,.05);color:#e8ede9}
+.nav-btn.active{background:rgba(255,255,255,.12);color:#fff;font-weight:500}
+.nav-badge{background:#9a5750;color:#fff;border-radius:10px;padding:1px 6px;font-size:10.5px;font-weight:600;margin-inline-start:4px}
+.app-main{padding:24px 32px;max-width:1400px;margin:0 auto}
+@media (max-width:1024px){.app-main{padding:20px 16px}}
+
+.user-info{display:flex;align-items:center;gap:12px;font-size:13px}
+.user-info .name{font-weight:600;color:#fff}
+.user-info .role{font-size:11px;color:#829588}
+.signout-btn,.lang-toggle{background:transparent;border:1px solid rgba(255,255,255,.15);color:#dfe8e3;border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer}
+.signout-btn:hover,.lang-toggle:hover{background:rgba(255,255,255,.06)}
+.lang-toggle{font-weight:600;min-width:42px}
+
+.card{background:#fff;border:1px solid #e6e8e4;border-radius:10px;overflow:hidden;margin-bottom:20px}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid #eef0ec}
+.card-head h3{font-size:14px;font-weight:600}
+.card-body{padding:20px}
+.data-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.data-table th{text-align:start;font-weight:500;color:#727c77;font-size:12px;padding:10px 18px;border-bottom:1px solid #e6e8e4;background:#fafbf9;white-space:nowrap}
+.data-table td{padding:14px 18px;border-bottom:1px solid #eef0ec;vertical-align:middle}
+.data-table tr:last-child td{border-bottom:0}
+.data-table tr.clickable{cursor:pointer}
+.data-table tr.clickable:hover{background:#fafbf9}
+.data-table td.actions{white-space:nowrap;text-align:end}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:#e6e8e4;border:1px solid #e6e8e4;border-radius:10px;overflow:hidden;margin-bottom:24px}
+.stat{background:#fff;padding:18px 22px}
+.stat-label{font-size:12px;color:#727c77}
+.stat-value{font-size:25px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+.stat-sub{font-size:11.5px;color:#9aa39e;margin-top:2px}
+
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;white-space:nowrap}
+.tag::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+
+.search-box{display:flex;align-items:center;gap:8px;background:#fafbf9;border:1px solid #e6e8e4;border-radius:8px;padding:6px 11px;max-width:360px;flex:1;min-width:200px;color:#727c77}
+.search-box input{border:0;background:transparent;outline:none;font-size:13.5px;width:100%;color:#2c3531}
+
+.fuel-bar{display:flex;align-items:center;gap:8px;min-width:110px}
+.fuel-track{flex:1;height:4px;border-radius:99px;background:#e8ebe7;overflow:hidden}
+.fuel-fill{height:100%;border-radius:99px}
+
+.modal-backdrop{position:fixed;inset:0;background:rgba(38,49,45,.45);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+.modal{background:#fff;border-radius:12px;width:100%;max-width:640px;box-shadow:0 20px 50px -25px rgba(38,49,45,.5);display:flex;flex-direction:column;max-height:90vh}
+.modal.lg{max-width:900px}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 22px;border-bottom:1px solid #eef0ec}
+.modal-head h3{font-size:15.5px;font-weight:600}
+.modal-head .sub{font-size:12.5px;color:#727c77;margin-top:2px}
+.modal-body{padding:20px 22px;overflow-y:auto}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid #eef0ec;background:#fafbf9;border-radius:0 0 12px 12px;flex-wrap:wrap}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:640px){.grid-2{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px;font-size:12.5px}
+.field label{color:#727c77;font-weight:500}
+.field input,.field select,.field textarea{border:1px solid #e6e8e4;border-radius:8px;padding:8px 11px;font-size:13.5px;background:#fff;width:100%;color:#2c3531}
+.field input[readonly]{background:#f7f8f6;color:#727c77}
+.field textarea{resize:vertical;min-height:70px}
+.field em{color:#9a5750;font-style:normal}
+.field input.invalid,.field select.invalid,.field textarea.invalid{border-color:#9a5750!important;background:#fdf8f7}
+.full{grid-column:1/-1}
+.form-section{margin-top:20px;padding-top:16px;border-top:1px solid #eef0ec}
+.form-section:first-child{margin-top:0;padding-top:0;border-top:0}
+.form-section h4{font-size:13px;font-weight:600;margin-bottom:12px;color:#2c3531;display:flex;align-items:center;gap:8px}
+.banner{background:#fafbf9;border:1px solid #e6e8e4;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#727c77}
+.banner strong{color:#2c3531}
+.radio-row{display:flex;gap:22px;margin-bottom:12px}
+.radio-row label{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;cursor:pointer;color:#2c3531}
+.radio-row input{accent-color:#4a6b5f}
+.checkbox-field{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.7;color:#727c77;cursor:pointer;background:#fafbf9;border:1px solid #e6e8e4;border-radius:8px;padding:12px 14px}
+.checkbox-field input{margin-top:3px;accent-color:#4a6b5f;flex:0 0 auto}
+.checkbox-field.invalid{border-color:#9a5750;background:#fdf8f7}
+
+.items-wrap{border:1px solid #e6e8e4;border-radius:8px;overflow:hidden}
+.items-table{width:100%;border-collapse:collapse;font-size:13px}
+.items-table th{padding:8px 10px;font-size:11.5px;background:#fafbf9;text-align:start;font-weight:500;color:#727c77;border-bottom:1px solid #e6e8e4;white-space:nowrap}
+.items-table td{padding:6px 10px;border-bottom:1px solid #eef0ec}
+.items-table input{border:1px solid #e6e8e4;border-radius:6px;padding:5px 8px;font-size:13px;width:100%;background:#fff}
+.items-table .item-price,.items-table .item-qty,.items-table .item-disc{width:90px}
+.items-table .item-desc{min-width:150px}
+.items-table .item-total{font-variant-numeric:tabular-nums;font-weight:500;color:#727c77;text-align:center}
+.items-total{margin-top:10px;text-align:end;font-size:13.5px;color:#727c77}
+.items-total strong{color:#2c3531;font-size:15px}
+.items-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+
+.file-field{margin-bottom:14px}
+.file-label{display:block;font-size:12.5px;color:#727c77;margin-bottom:5px;font-weight:500}
+.file-label em{color:#9a5750;font-style:normal}
+.file-label input[type=file]{display:block;margin-top:6px;font-size:12.5px;border:1px dashed #e6e8e4;border-radius:7px;padding:8px;width:100%;color:#727c77}
+.file-label input[type=file].invalid{border-color:#9a5750;background:#fdf8f7}
+.file-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.file-chip{display:inline-flex;align-items:center;gap:4px;background:#f3f5f2;border:1px solid #e6e8e4;border-radius:6px;padding:3px 9px;font-size:12px;color:#2c3531}
+.file-chip button{background:transparent;border:0;color:#9aa39e;padding:0;margin-inline-start:2px;display:inline-flex;cursor:pointer}
+.file-chip button:hover{color:#9a5750}
+
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px}
+.detail-grid > div > .lbl{font-size:11.5px;color:#727c77;margin-bottom:2px}
+
+.map{position:relative;height:340px;border-radius:10px;overflow:hidden;border:1px solid #e6e8e4;background:linear-gradient(180deg,#f7f9f7,#eef2ee)}
+.map::before{content:'';position:absolute;inset:0;opacity:.6;background-image:linear-gradient(#e3e8e2 1px,transparent 1px),linear-gradient(90deg,#e3e8e2 1px,transparent 1px);background-size:36px 36px}
+.map-pin{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:#4a5a53;font-weight:500}
+.map-dot{width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 3px rgba(74,107,95,.15)}
+
+.toast-box{position:fixed;bottom:20px;inset-inline-start:20px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+.toast{background:#26312d;color:#e8ede9;padding:10px 14px;border-radius:8px;font-size:13px;box-shadow:0 12px 28px -18px rgba(38,49,45,.7);max-width:340px;display:flex;align-items:center;gap:9px}
+.toast.red{background:#7c4640}
+.toast.amber{background:#7a6438}
+
+.detail-header{background:#fff;border:1px solid #e6e8e4;border-radius:10px;padding:20px 24px;margin-bottom:16px}
+.detail-title{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.detail-title .avatar{width:52px;height:52px;border-radius:12px;background:#eef2ef;color:#4a6b5f;display:grid;place-items:center;flex:0 0 auto}
+.detail-title h1{font-size:22px;font-weight:700;margin:0}
+.detail-title .sub{color:#727c77;font-size:13px;margin-top:2px}
+.detail-tabs{display:flex;gap:4px;border-bottom:1px solid #e6e8e4;margin-top:16px;overflow-x:auto}
+.detail-tab{background:transparent;border:0;padding:10px 16px;font-size:13.5px;color:#727c77;border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer}
+.detail-tab:hover{color:#2c3531}
+.detail-tab.active{color:#4a6b5f;border-bottom-color:#4a6b5f;font-weight:500}
+.stat-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:14px 0}
+.stat-mini .item{background:#fafbf9;border:1px solid #eef0ec;border-radius:8px;padding:10px 14px}
+.stat-mini .lbl{font-size:11.5px;color:#727c77}
+.stat-mini .val{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+
+.report-filter{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.report-bars{display:flex;flex-direction:column;gap:10px}
+.report-bar{display:grid;grid-template-columns:180px 1fr 100px;gap:12px;align-items:center;font-size:13px}
+.report-bar .fill{height:8px;border-radius:4px;background:#4a6b5f;opacity:.75}
+.report-bar .fill.amber{background:#8f7440}
+.report-bar .fill.red{background:#9a5750}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:8px;padding:8px 14px;font-size:13.5px;font-weight:500;background:transparent;color:#2c3531}
+.btn-ghost{background:#fff;border:1px solid #e6e8e4;color:#2c3531}
+.btn-ghost:hover{background:#f7f8f6}
+.btn-primary-sm{background:#4a6b5f;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:13.5px}
+.btn-primary-sm:hover{background:#3a564b}
+.btn-sm{padding:5px 10px;font-size:12.5px}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;border:0;background:transparent;color:#9aa39e;padding:0}
+.icon-btn:hover{background:#eef0ec;color:#2c3531}
+.icon-btn.danger:hover{background:#f6eceb;color:#9a5750}
+</style>
+</head>
+<body>
+
+<div id="authScreen" style="display:flex">
+  <div class="auth-card">
+    <button class="lang-btn" id="authLangBtn">EN</button>
+    <div class="auth-logo" id="authLogo"></div>
+    <h2 class="auth-title" id="authTitle"></h2>
+    <p class="auth-subtitle" id="authSubtitle"></p>
+    <div id="authError"></div>
+    <div id="authDiag"></div>
+    <div class="auth-field">
+      <label id="lblEmail"></label>
+      <input type="email" id="authEmail" dir="ltr" autocomplete="email" placeholder="you@example.com">
+    </div>
+    <div class="auth-field">
+      <label id="lblPassword"></label>
+      <input type="password" id="authPassword" dir="ltr" autocomplete="current-password" placeholder="••••••••">
+    </div>
+    <div class="auth-field hidden" id="authNameField">
+      <label id="lblFullName"></label>
+      <input type="text" id="authName">
+    </div>
+    <button class="auth-btn" id="authSubmit"></button>
+    <div class="auth-switch">
+      <span id="authSwitchText"></span>
+      <a id="authSwitchLink"></a>
+    </div>
+  </div>
+</div>
+
+<div id="appRoot" class="hidden">
+  <header class="app-header">
+    <div class="brand" id="headerLogo"></div>
+    <div class="user-info">
+      <div style="text-align:end">
+        <div class="name" id="headerUserName">—</div>
+        <div class="role" id="headerUserRole">—</div>
+      </div>
+      <button class="lang-toggle" id="appLangBtn">EN</button>
+      <button class="signout-btn" id="signoutBtn"></button>
+    </div>
+  </header>
+  <nav class="app-nav" id="appNav"></nav>
+  <main class="app-main" id="appView"></main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toasts" class="toast-box"></div>
+
+<script>
+(function() {
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════════
+   🌐 i18n — نظام الترجمة
+   ═══════════════════════════════════════════════════════════════ */
+const I18N = {
+  ar: {
+    // Common
+    save: 'حفظ', cancel: 'إلغاء', delete: 'حذف', edit: 'تعديل', add: 'إضافة',
+    close: 'إغلاق', search: 'بحث', confirm: 'تأكيد', back: 'عودة', yes: 'نعم', no: 'لا',
+    status: 'الحالة', actions: 'إجراءات', date: 'التاريخ', time: 'الوقت', notes: 'ملاحظات',
+    amount: 'المبلغ', description: 'الوصف', required: 'مطلوب', optional: 'اختياري',
+    view: 'عرض', pdf: 'PDF', export_csv: 'تصدير CSV',
+    
+    // Auth
+    sign_in: 'تسجيل الدخول', sign_up: 'إنشاء حساب جديد',
+    sign_in_subtitle: 'أدخل بيانات حسابك للمتابعة',
+    sign_up_subtitle: 'أنشئ حسابك للوصول إلى النظام',
+    email: 'البريد الإلكتروني', password: 'كلمة المرور', full_name: 'الاسم الكامل',
+    login_btn: 'تسجيل الدخول', create_account_btn: 'إنشاء الحساب',
+    have_account: 'لديك حساب بالفعل؟', no_account: 'ليس لديك حساب؟',
+    switch_to_signin: 'تسجيل الدخول', switch_to_signup: 'إنشاء حساب',
+    please_fill_email: 'أدخل البريد الإلكتروني', please_fill_password: 'أدخل كلمة المرور',
+    please_fill_name: 'أدخل الاسم الكامل', password_too_short: 'كلمة المرور 6 أحرف على الأقل',
+    invalid_credentials: 'البريد أو كلمة المرور غير صحيحة',
+    email_registered: 'هذا البريد مسجل مسبقاً',
+    email_not_confirmed: 'يرجى تأكيد البريد الإلكتروني أولاً',
+    account_created: 'تم إنشاء الحساب. يرجى تأكيد البريد الإلكتروني أو تواصل مع المدير.',
+    signing_in: 'جاري...', error_occurred: 'حدث خطأ',
+    logout: 'خروج',
+    admin_role: 'مدير النظام', user_role: 'مستخدم عادي',
+    
+    // Nav
+    dashboard: 'لوحة التحكم', fleet: 'الأسطول', maintenance: 'الصيانة', tracking: 'التعقب',
+    tasks: 'المهمات', requests: 'الطلبات', violations: 'المخالفات', documents: 'الوثائق',
+    fuel: 'الوقود', reports: 'التقارير', users: 'المستخدمون',
+    
+    // Dashboard
+    dashboard_title: 'لوحة التحكم', dashboard_sub: 'نظرة شاملة',
+    total_fleet: 'الأسطول', active_count: '{0} قيد التشغيل',
+    in_maintenance: 'في الصيانة', open_requests: '{0} طلب مفتوح',
+    pending_requests: 'طلبات معلّقة',
+    unpaid_violations: 'مخالفات غير مسددة',
+    month_fuel: 'وقود الشهر', currency: 'درهم',
+    alerts: 'التنبيهات', no_alerts: 'لا تنبيهات',
+    fuel_levels: 'مستويات الوقود',
+    
+    // Vehicles
+    fleet_title: 'الأسطول والسائقون', fleet_sub: '{0} مركبة · {1} سائق',
+    vehicles: 'المركبات', drivers: 'السائقون',
+    add_vehicle: 'مركبة', add_driver: 'سائق',
+    vehicle: 'المركبة', type: 'النوع', driver: 'السائق', odometer: 'العداد',
+    km: 'كم', search_vehicles: 'بحث...', search_drivers: 'بحث...',
+    readonly: 'قراءة فقط',
+    vehicle_status_active: 'قيد التشغيل', vehicle_status_idle: 'متوقفة',
+    vehicle_status_maintenance: 'في الصيانة', vehicle_status_retired: 'خارج الخدمة',
+    
+    // Vehicle Detail
+    overview: 'نظرة عامة', maintenance_tab: 'الصيانة', fuel_tab: 'الوقود',
+    violations_tab: 'المخالفات', documents_tab: 'الوثائق', tasks_tab: 'المهمات',
+    tracking_tab: 'التعقب',
+    cost_per_km: 'تكلفة/كم', total_cost: 'إجمالي', next_service: 'الصيانة القادمة',
+    distance_from_fuel: 'المسافة من الوقود',
+    driver_info: 'السائق', financial_summary: 'الملخص المالي',
+    no_driver: 'لا يوجد سائق',
+    back_to_fleet: 'عودة للأسطول',
+    
+    // Maintenance
+    maintenance_title: 'الصيانة', maintenance_sub: '{0} طلب · {1} مفتوح · {2} مغلق · {3}',
+    open: 'مفتوحة', closed: 'مغلقة', request_no: 'الرقم', garage: 'الكراج',
+    maintenance_type: 'النوع', cost: 'التكلفة',
+    add_maintenance: 'طلب صيانة جديد',
+    search_maintenance: 'بحث...',
+    status_open: 'مفتوحة', status_closed: 'مغلقة',
+    type_periodic: 'صيانة دورية', type_other: 'أخرى',
+    stage_1_open: 'المرحلة 1 — فتح طلب الصيانة.',
+    stage_2_close: 'المرحلة 2 — إغلاق',
+    request_info: 'معلومات الطلب', request_no_label: 'رقم طلب الصيانة',
+    garage_info: 'بيانات الكراج', garage_name: 'اسم الكراج (كما في العقد/الفاتورة)',
+    garage_address: 'عنوان الكراج', garage_contact: 'اسم شخص الاتصال (من طرف الكراج)',
+    garage_phone: 'رقم شخص الاتصال',
+    delivery_dates: 'مواعيد التسليم', maintenance_date: 'تاريخ الصيانة',
+    delivery_date: 'تاريخ تسليم السيارة', delivery_time: 'وقت التسليم',
+    receipt_date: 'تاريخ استلام السيارة', receipt_time: 'وقت الاستلام',
+    employee_info: 'موظف الشركة', employee_name: 'اسم موظف شركتنا',
+    employee_phone: 'رقم الموظف',
+    maintenance_type_label: 'نوع الصيانة',
+    items_section: 'بنود الصيانة (سعر، كمية، إجمالي، خصم)',
+    add_item: 'إضافة بند', item_desc: 'وصف البند', item_price: 'السعر (د.إ)',
+    item_qty: 'الكمية', item_total: 'الإجمالي', item_discount: 'الخصم',
+    grand_total: 'الإجمالي الكلي',
+    attachments_required: 'المرفقات (إلزامية)',
+    damaged_parts: 'صور القطع التالفة', quote_invoice: 'عرض السعر / الفاتورة الأولية',
+    receipt_reading: 'قراءة العداد النهائية (كم)',
+    final_items: 'بنود الصيانة النهائية',
+    final_items_hint: 'عدّل البنود حسب الفاتورة النهائية',
+    final_cost: 'التكلفة النهائية', final_cost_label: 'تكلفة الصيانة (د.إ)',
+    final_attachments: 'المرفقات النهائية (إلزامية)',
+    replaced_parts: 'صور القطع المستبدلة', final_invoice: 'الفاتورة النهائية للصيانة',
+    close_notes: 'ملاحظات الإغلاق',
+    acknowledgement: 'إقرار',
+    acknowledgement_text: 'أتعهد أنني قمت بالتأكد من نجاح عملية الصيانة وأنه قد تم استبدال القطع اللازمة فقط والسيارة الآن تعمل بشكل جيد وطبيعي.',
+    acknowledge_required: 'يجب الموافقة على الإقرار قبل الإغلاق',
+    add_item_required: 'أضف بنداً واحداً على الأقل',
+    attach_damaged_required: 'أرفق صور القطع التالفة',
+    attach_quote_required: 'أرفق عرض السعر',
+    attach_replaced_required: 'أرفق صور القطع المستبدلة',
+    attach_invoice_required: 'أرفق الفاتورة النهائية',
+    complete_fields_required: 'أكمل الحقول الإلزامية',
+    request_opened: 'تم فتح الطلب ووضع المركبة في الصيانة',
+    request_closed: 'تم إغلاق الطلب',
+    pdf_title: 'طلب صيانة',
+    
+    // Fuel
+    fuel_title: 'إدارة الوقود', fuel_sub: '{0} عملية · {1} لتر',
+    fuel_month_cost: 'تكلفة الشهر', fuel_liters: 'اللترات', fuel_total: 'الإجمالي',
+    fuel_date: 'التاريخ', fuel_liters_label: 'اللترات',
+    fuel_price_per_liter: 'السعر', fuel_cost: 'التكلفة', fuel_odometer: 'العداد',
+    consumption_rate: 'معدل الصرف', station: 'المحطة', receipt: 'الإيصال',
+    add_fuel: 'تسجيل تزويد', fuel_add_title: 'تسجيل تزويد وقود',
+    fuel_liters_input: 'عدد اللترات', fuel_price_input: 'سعر اللتر (د.إ)',
+    fuel_odometer_input: 'قراءة العداد (كم)', station_input: 'المحطة',
+    receipt_image: 'صورة إيصال التعبئة (اختياري)',
+    liter: 'لتر', km_per_liter: 'كم/ل',
+    consumption_first: '—',  // للعينة الأولى
+    
+    // Tracking
+    tracking_title: 'التعقب', tracking_sub: '{0} متحركة',
+    update_locations: 'تحديث',
+    map: 'الخريطة', current_locations: 'المواقع', 
+    tracking_alerts: 'التنبيهات', tracking_log: 'السجل',
+    speed: 'السرعة', moving: 'متحركة', stopped: 'متوقفة', idle: 'خاملة',
+    no_alerts_short: 'لا تنبيهات',
+    
+    // Tasks
+    tasks_title: 'المهمات', tasks_sub: '{0} مهمة',
+    add_task: 'مهمة جديدة', task_title: 'المهمة', task_title_label: 'عنوان المهمة',
+    route: 'المسار', period: 'البدء', priority: 'الأولوية', 
+    start_date: 'تاريخ البدء', end_date: 'تاريخ الانتهاء',
+    from: 'من', to: 'إلى',
+    priority_high: 'عالية', priority_medium: 'متوسطة', priority_low: 'منخفضة',
+    task_scheduled: 'مجدولة', task_running: 'جارية', task_done: 'مكتملة', task_canceled: 'ملغاة',
+    task_late: 'متأخرة', start: 'بدء', finish: 'إنجاز',
+    
+    // Requests
+    requests_title: 'طلبات السائقين', requests_sub: '{0} طلب · {1} معلّق',
+    add_request: 'طلب جديد', requester: 'المقدم',
+    request_description: 'الوصف',
+    request_new: 'جديدة', request_review: 'مراجعة', request_approved: 'معتمدة',
+    request_rejected: 'مرفوضة', request_done: 'منجزة',
+    approve: 'اعتماد', reject: 'رفض',
+    requested_by: 'مقدم الطلب', problem_description: 'وصف المشكلة',
+    
+    // Violations
+    violations_title: 'المخالفات', violations_sub: '{0} مخالفة · {1} غير مسددة · {2}',
+    add_violation: 'مخالفة جديدة',
+    salik: 'سالك', rta: 'RTA', violation_type: 'النوع',
+    reference_no: 'الرقم المرجعي', location: 'الموقع',
+    violation_paid: 'مسددة', violation_unpaid: 'غير مسددة',
+    all_types: 'كل الأنواع', all_statuses: 'كل الحالات',
+    mark_paid: 'تسديد',
+    type: 'النوع',
+    
+    // Documents
+    documents_title: 'الوثائق', documents_sub: '{0} وثيقة · {1} قاربت · {2} منتهية',
+    add_document: 'إضافة',
+    doc_registration: 'تسجيل', doc_insurance: 'تأمين', doc_inspection: 'فحص', doc_other: 'أخرى',
+    doc_name: 'اسم الوثيقة', doc_number: 'رقم الوثيقة',
+    issue_date: 'تاريخ الإصدار', expiry_date: 'تاريخ الانتهاء',
+    issuer: 'الجهة المُصدرة',
+    doc_valid: 'سارية', doc_expiring: 'قاربت', doc_expired: 'منتهية',
+    
+    // Reports
+    reports_title: 'التقارير', reports_sub: 'من {0} إلى {1}',
+    from_date: 'من', to_date: 'إلى',
+    period: 'الفترة',
+    fuel_cost: 'وقود', maintenance_cost: 'صيانة', violations_cost: 'مخالفات',
+    total_label: 'الإجمالي',
+    cost_distribution: 'توزيع التكاليف',
+    top5: 'أعلى 5',
+    vehicle_details: 'تفاصيل كل مركبة',
+    distance: 'المسافة',
+    
+    // Users
+    users_title: 'المستخدمون', users_sub: '{0} مستخدم · {1} مدير',
+    user_list: 'قائمة المستخدمين',
+    role: 'الدور', admin: 'مدير', user: 'مستخدم',
+    you: '(أنت)', created_at: 'التاريخ',
+    no_users: 'لا يوجد مستخدمون',
+    change_role: 'تبديل الدور',
+    not_authorized: 'ليست لديك صلاحية',
+    role_changed: 'تم التغيير إلى',
+    
+    // Toasts
+    saved: 'تم', deleted: 'حُذف', added: 'تمت الإضافة', updated: 'تم التحديث',
+    error_save: 'فشل الحفظ',
+    phone_must_10: 'رقم الهاتف يجب أن يكون 10 أرقام',
+    confirm_delete: 'تأكيد الحذف؟',
+    
+    // Table headers
+    plate: 'اللوحة', make: 'الشركة', model: 'الطراز', year: 'السنة',
+    license_no: 'الرخصة', license_expiry: 'انتهاء الرخصة',
+    
+    // Misc
+    search_placeholder: 'بحث...',
+    select_vehicle: 'المركبة',
+    none: '—',
+    today: 'اليوم',
+    file_uploaded: 'الملف',
+  },
+  en: {
+    // Common
+    save: 'Save', cancel: 'Cancel', delete: 'Delete', edit: 'Edit', add: 'Add',
+    close: 'Close', search: 'Search', confirm: 'Confirm', back: 'Back', yes: 'Yes', no: 'No',
+    status: 'Status', actions: 'Actions', date: 'Date', time: 'Time', notes: 'Notes',
+    amount: 'Amount', description: 'Description', required: 'Required', optional: 'Optional',
+    view: 'View', pdf: 'PDF', export_csv: 'Export CSV',
+    
+    // Auth
+    sign_in: 'Sign In', sign_up: 'Create Account',
+    sign_in_subtitle: 'Enter your credentials to continue',
+    sign_up_subtitle: 'Create your account to access the system',
+    email: 'Email', password: 'Password', full_name: 'Full Name',
+    login_btn: 'Sign In', create_account_btn: 'Create Account',
+    have_account: 'Already have an account?', no_account: "Don't have an account?",
+    switch_to_signin: 'Sign In', switch_to_signup: 'Create Account',
+    please_fill_email: 'Enter your email', please_fill_password: 'Enter your password',
+    please_fill_name: 'Enter your full name', password_too_short: 'Password must be at least 6 characters',
+    invalid_credentials: 'Invalid email or password',
+    email_registered: 'This email is already registered',
+    email_not_confirmed: 'Please confirm your email first',
+    account_created: 'Account created. Please confirm your email or contact admin.',
+    signing_in: 'Loading...', error_occurred: 'An error occurred',
+    logout: 'Sign Out',
+    admin_role: 'Administrator', user_role: 'Regular User',
+    
+    // Nav
+    dashboard: 'Dashboard', fleet: 'Fleet', maintenance: 'Maintenance', tracking: 'Tracking',
+    tasks: 'Tasks', requests: 'Requests', violations: 'Violations', documents: 'Documents',
+    fuel: 'Fuel', reports: 'Reports', users: 'Users',
+    
+    // Dashboard
+    dashboard_title: 'Dashboard', dashboard_sub: 'Overview',
+    total_fleet: 'Total Fleet', active_count: '{0} active',
+    in_maintenance: 'In Maintenance', open_requests: '{0} open requests',
+    pending_requests: 'Pending Requests',
+    unpaid_violations: 'Unpaid Violations',
+    month_fuel: 'Monthly Fuel', currency: 'AED',
+    alerts: 'Alerts', no_alerts: 'No alerts',
+    fuel_levels: 'Fuel Levels',
+    
+    // Vehicles
+    fleet_title: 'Fleet & Drivers', fleet_sub: '{0} vehicles · {1} drivers',
+    vehicles: 'Vehicles', drivers: 'Drivers',
+    add_vehicle: 'Vehicle', add_driver: 'Driver',
+    vehicle: 'Vehicle', type: 'Type', driver: 'Driver', odometer: 'Odometer',
+    km: 'km', search_vehicles: 'Search...', search_drivers: 'Search...',
+    readonly: 'Read only',
+    vehicle_status_active: 'Active', vehicle_status_idle: 'Idle',
+    vehicle_status_maintenance: 'Maintenance', vehicle_status_retired: 'Retired',
+    
+    // Vehicle Detail
+    overview: 'Overview', maintenance_tab: 'Maintenance', fuel_tab: 'Fuel',
+    violations_tab: 'Violations', documents_tab: 'Documents', tasks_tab: 'Tasks',
+    tracking_tab: 'Tracking',
+    cost_per_km: 'Cost/km', total_cost: 'Total', next_service: 'Next Service',
+    distance_from_fuel: 'Distance from fuel',
+    driver_info: 'Driver', financial_summary: 'Financial Summary',
+    no_driver: 'No driver assigned',
+    back_to_fleet: 'Back to Fleet',
+    
+    // Maintenance
+    maintenance_title: 'Maintenance', maintenance_sub: '{0} requests · {1} open · {2} closed · {3}',
+    open: 'Open', closed: 'Closed', request_no: 'Request #', garage: 'Garage',
+    maintenance_type: 'Type', cost: 'Cost',
+    add_maintenance: 'New Request',
+    search_maintenance: 'Search...',
+    status_open: 'Open', status_closed: 'Closed',
+    type_periodic: 'Periodic', type_other: 'Other',
+    stage_1_open: 'Stage 1 — Open Maintenance Request.',
+    stage_2_close: 'Stage 2 — Close',
+    request_info: 'Request Information', request_no_label: 'Request Number',
+    garage_info: 'Garage Information', garage_name: 'Garage Name (as in contract/invoice)',
+    garage_address: 'Garage Address', garage_contact: 'Contact Person (Garage)',
+    garage_phone: 'Contact Phone',
+    delivery_dates: 'Dates', maintenance_date: 'Maintenance Date',
+    delivery_date: 'Vehicle Delivery Date', delivery_time: 'Delivery Time',
+    receipt_date: 'Vehicle Receipt Date', receipt_time: 'Receipt Time',
+    employee_info: 'Company Employee', employee_name: 'Employee Name',
+    employee_phone: 'Employee Phone',
+    maintenance_type_label: 'Maintenance Type',
+    items_section: 'Items (Price, Qty, Total, Discount)',
+    add_item: 'Add Item', item_desc: 'Description', item_price: 'Price (AED)',
+    item_qty: 'Qty', item_total: 'Total', item_discount: 'Discount',
+    grand_total: 'Grand Total',
+    attachments_required: 'Attachments (Required)',
+    damaged_parts: 'Damaged Parts Photos', quote_invoice: 'Quote / Initial Invoice',
+    receipt_reading: 'Final Odometer Reading (km)',
+    final_items: 'Final Maintenance Items',
+    final_items_hint: 'Adjust items per final invoice',
+    final_cost: 'Final Cost', final_cost_label: 'Maintenance Cost (AED)',
+    final_attachments: 'Final Attachments (Required)',
+    replaced_parts: 'Replaced Parts Photos', final_invoice: 'Final Invoice',
+    close_notes: 'Close Notes',
+    acknowledgement: 'Acknowledgement',
+    acknowledgement_text: 'I certify that I have verified the maintenance was successful, only necessary parts were replaced, and the vehicle is now working properly.',
+    acknowledge_required: 'You must accept the acknowledgement before closing',
+    add_item_required: 'Add at least one item',
+    attach_damaged_required: 'Attach damaged parts photos',
+    attach_quote_required: 'Attach quote',
+    attach_replaced_required: 'Attach replaced parts photos',
+    attach_invoice_required: 'Attach final invoice',
+    complete_fields_required: 'Complete required fields',
+    request_opened: 'Request opened, vehicle in maintenance',
+    request_closed: 'Request closed',
+    pdf_title: 'Maintenance Request',
+    
+    // Fuel
+    fuel_title: 'Fuel Management', fuel_sub: '{0} records · {1} liters',
+    fuel_month_cost: 'Month Cost', fuel_liters: 'Liters', fuel_total: 'Total',
+    fuel_date: 'Date', fuel_liters_label: 'Liters',
+    fuel_price_per_liter: 'Price', fuel_cost: 'Cost', fuel_odometer: 'Odometer',
+    consumption_rate: 'Consumption', station: 'Station', receipt: 'Receipt',
+    add_fuel: 'Add Record', fuel_add_title: 'Fuel Record',
+    fuel_liters_input: 'Liters', fuel_price_input: 'Price per Liter (AED)',
+    fuel_odometer_input: 'Odometer (km)', station_input: 'Station',
+    receipt_image: 'Receipt Image (optional)',
+    liter: 'L', km_per_liter: 'km/L',
+    consumption_first: '—',
+    
+    // Tracking
+    tracking_title: 'Tracking', tracking_sub: '{0} moving',
+    update_locations: 'Update',
+    map: 'Map', current_locations: 'Locations',
+    tracking_alerts: 'Alerts', tracking_log: 'Log',
+    speed: 'Speed', moving: 'Moving', stopped: 'Stopped', idle: 'Idle',
+    no_alerts_short: 'No alerts',
+    
+    // Tasks
+    tasks_title: 'Tasks', tasks_sub: '{0} tasks',
+    add_task: 'New Task', task_title: 'Task', task_title_label: 'Task Title',
+    route: 'Route', period: 'Start', priority: 'Priority',
+    start_date: 'Start Date', end_date: 'End Date',
+    from: 'From', to: 'To',
+    priority_high: 'High', priority_medium: 'Medium', priority_low: 'Low',
+    task_scheduled: 'Scheduled', task_running: 'Running', task_done: 'Done', task_canceled: 'Canceled',
+    task_late: 'Late', start: 'Start', finish: 'Finish',
+    
+    // Requests
+    requests_title: 'Driver Requests', requests_sub: '{0} requests · {1} pending',
+    add_request: 'New Request', requester: 'Requester',
+    request_description: 'Description',
+    request_new: 'New', request_review: 'Review', request_approved: 'Approved',
+    request_rejected: 'Rejected', request_done: 'Done',
+    approve: 'Approve', reject: 'Reject',
+    requested_by: 'Requested by', problem_description: 'Problem Description',
+    
+    // Violations
+    violations_title: 'Violations', violations_sub: '{0} · {1} unpaid · {2}',
+    add_violation: 'New Violation',
+    salik: 'Salik', rta: 'RTA', violation_type: 'Type',
+    reference_no: 'Reference #', location: 'Location',
+    violation_paid: 'Paid', violation_unpaid: 'Unpaid',
+    all_types: 'All Types', all_statuses: 'All Statuses',
+    mark_paid: 'Mark Paid',
+    
+    // Documents
+    documents_title: 'Documents', documents_sub: '{0} documents · {1} expiring · {2} expired',
+    add_document: 'Add',
+    doc_registration: 'Registration', doc_insurance: 'Insurance', doc_inspection: 'Inspection', doc_other: 'Other',
+    doc_name: 'Document Name', doc_number: 'Document Number',
+    issue_date: 'Issue Date', expiry_date: 'Expiry Date',
+    issuer: 'Issuer',
+    doc_valid: 'Valid', doc_expiring: 'Expiring', doc_expired: 'Expired',
+    
+    // Reports
+    reports_title: 'Reports', reports_sub: 'From {0} to {1}',
+    from_date: 'From', to_date: 'To',
+    period: 'Period',
+    fuel_cost: 'Fuel', maintenance_cost: 'Maintenance', violations_cost: 'Violations',
+    total_label: 'Total',
+    cost_distribution: 'Cost Distribution',
+    top5: 'Top 5',
+    vehicle_details: 'Vehicle Details',
+    distance: 'Distance',
+    
+    // Users
+    users_title: 'Users', users_sub: '{0} users · {1} admins',
+    user_list: 'User List',
+    role: 'Role', admin: 'Admin', user: 'User',
+    you: '(you)', created_at: 'Created',
+    no_users: 'No users',
+    change_role: 'Change Role',
+    not_authorized: 'Not authorized',
+    role_changed: 'Changed to',
+    
+    // Toasts
+    saved: 'Saved', deleted: 'Deleted', added: 'Added', updated: 'Updated',
+    error_save: 'Save failed',
+    phone_must_10: 'Phone must be exactly 10 digits',
+    confirm_delete: 'Confirm deletion?',
+    
+    // Table headers
+    plate: 'Plate', make: 'Make', model: 'Model', year: 'Year',
+    license_no: 'License #', license_expiry: 'License Expiry',
+    
+    // Misc
+    search_placeholder: 'Search...',
+    select_vehicle: 'Vehicle',
+    none: '—',
+    today: 'Today',
+    file_uploaded: 'File',
+  }
+};
+
+let currentLang = (function() {
+  const saved = localStorage.getItem('fleet_lang');
+  if (saved === 'ar' || saved === 'en') return saved;
+  return (navigator.language || 'ar').startsWith('ar') ? 'ar' : 'en';
+})();
+
+function t(key, ...args) {
+  let str = (I18N[currentLang] && I18N[currentLang][key]) || (I18N.ar[key]) || key;
+  args.forEach((val, i) => { str = str.replace('{' + i + '}', val); });
+  return str;
+}
+
+function applyDirection() {
+  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = currentLang;
+}
+
+function updateLangButtons() {
+  const label = currentLang === 'ar' ? 'EN' : 'ع';
+  const authBtn = document.getElementById('authLangBtn');
+  const appBtn = document.getElementById('appLangBtn');
+  if (authBtn) authBtn.textContent = label;
+  if (appBtn) appBtn.textContent = label;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('fleet_lang', currentLang);
+  applyDirection();
+  updateLangButtons();
+  // Re-render all UI
+  updateStaticTexts();
+  if (currentProfile) {
+    renderNav();
+    render();
+  } else {
+    updateAuthTexts();
+  }
+}
+
+function updateStaticTexts() {
+  // Auth labels
+  const lblEmail = document.getElementById('lblEmail'); if (lblEmail) lblEmail.textContent = t('email');
+  const lblPassword = document.getElementById('lblPassword'); if (lblPassword) lblPassword.textContent = t('password');
+  const lblFullName = document.getElementById('lblFullName'); if (lblFullName) lblFullName.textContent = t('full_name');
+  const signoutBtn = document.getElementById('signoutBtn'); if (signoutBtn) signoutBtn.textContent = t('logout');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🎨 اللوقو
+   ═══════════════════════════════════════════════════════════════ */
+const LOGO_CONFIG = {
+  imageUrl: '',
+  name: 'أسطول',
+  nameEn: 'Fleet',
+  subtitle: 'FLEET MANAGEMENT'
+};
+
+function renderLogo(size) {
+  size = size || 'md';
+  const heights = { sm: 36, md: 42, lg: 48 };
+  const h = heights[size] || 42;
+  const name = currentLang === 'ar' ? LOGO_CONFIG.name : LOGO_CONFIG.nameEn;
+
+  if (LOGO_CONFIG.imageUrl && LOGO_CONFIG.imageUrl.trim()) {
+    return `<div style="display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,#2a3631,#33423c);border-radius:10px;padding:8px 16px;min-height:${h+16}px">
+      <img src="${esc(LOGO_CONFIG.imageUrl)}" alt="${esc(name)}" style="max-width:100%;max-height:${h}px;object-fit:contain;display:block">
+    </div>`;
+  }
+  return `<div style="display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#2a3631,#33423c);border-radius:10px;padding:10px 16px;min-height:${h+10}px">
+    <div style="width:${h-4}px;height:${h-4}px;border-radius:10px;background:#3f544b;color:#d7e0da;display:grid;place-items:center">
+      <svg width="${h-20}" height="${h-20}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="1" y="6" width="14" height="11" rx="2"/><path d="M15 9h3.5l3.5 3.5V17H15z"/><circle cx="5.5" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>
+    </div>
+    <div style="display:flex;flex-direction:column;line-height:1.15">
+      <span style="color:#eef2ef;font-size:17px;font-weight:800">${esc(name)}</span>
+      <span style="color:#829588;font-size:10px;letter-spacing:.5px">${esc(LOGO_CONFIG.subtitle)}</span>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ⚙️ Supabase
+   ═══════════════════════════════════════════════════════════════ */
+const SUPABASE_URL = 'https://aialxtchvjmqwflmaswz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWx4dGNodmptcXdmbG1hc3d6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMTUwODgsImV4cCI6MjEwODc5MTA4OH0.7t3_j87yWlJ9H_ek2Dqwx3-QIxzykaXTwqJ4TYxhiBQ';
+
+/* ═══════════════════════════════════════════════════════════════
+   🛠️ Utilities
+   ═══════════════════════════════════════════════════════════════ */
+const $ = s => document.querySelector(s);
+const uid = p => (p||'id') + '_' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+const todayISO = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
+const addDays = (iso,n) => { const d = new Date(iso); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const clamp = (n,a,b) => Math.min(b, Math.max(a,n));
+const fmtNum = n => Number(n||0).toLocaleString(currentLang === 'ar' ? 'en-US' : 'en-US');
+const money = n => fmtNum(Math.round(Number(n||0)*100)/100) + ' ' + t('currency');
+const fmtDate = iso => { 
+  if(!iso) return '—'; 
+  const d = new Date(iso+'T00:00:00'); 
+  if(isNaN(d)) return iso; 
+  return d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US',{day:'2-digit',month:'short',year:'numeric'}); 
+};
+const fmtTime = ts => { if(!ts) return '—'; return new Date(ts).toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US',{hour:'2-digit',minute:'2-digit'}); };
+const timeAgo = ts => { if(!ts) return '—'; const m = Math.floor((Date.now()-new Date(ts).getTime())/60000); if(m<1) return currentLang === 'ar' ? 'الآن' : 'just now'; if(m<60) return (currentLang === 'ar' ? 'قبل ' : '') + m + (currentLang === 'ar' ? ' د' : 'm'); if(m<1440) return (currentLang === 'ar' ? 'قبل ' : '') + Math.floor(m/60) + (currentLang === 'ar' ? ' س' : 'h'); return (currentLang === 'ar' ? 'قبل ' : '') + Math.floor(m/1440) + (currentLang === 'ar' ? ' ي' : 'd'); };
+const daysUntil = iso => { if(!iso) return null; const a = new Date(iso+'T00:00:00'), b = new Date(todayISO()+'T00:00:00'); return Math.round((a-b)/86400000); };
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const monthStart = () => todayISO().slice(0,7) + '-01';
+
+function isValidPhone(phone) {
+  const digits = String(phone || '').replace(/\D/g, '');
+  return digits.length === 10;
+}
+function normalizeNumber(str) {
+  return String(str || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[^\d]/g, '');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🎨 Icons
+   ═══════════════════════════════════════════════════════════════ */
+const ICONS = {
+  dashboard:'<rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/>',
+  truck:'<rect x="1" y="5" width="14" height="12" rx="2"/><path d="M15 9h3.4l3.6 3.6V17h-7z"/><circle cx="5.5" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>',
+  wrench:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  pin:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  clipboard:'<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>',
+  inbox:'<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  droplet:'<path d="M12 2.7l5.66 5.66a8 8 0 1 1-11.31 0z"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  play:'<polygon points="6 3 20 12 6 21 6 3"/>',
+  refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+  arrowLeft:'<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  arrowRight:'<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+  tag:'<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
+  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+};
+const icon = (name, size=16) => `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`;
+
+/* ═══════════════════════════════════════════════════════════════
+   🏷️ Label maps — استخدم t() عند العرض
+   ═══════════════════════════════════════════════════════════════ */
+const VEHICLE_STATUS = { 
+  active:    ['vehicle_status_active',    '#5a7d63'],
+  idle:      ['vehicle_status_idle',      '#727c77'],
+  maintenance:['vehicle_status_maintenance','#8f7440'],
+  retired:   ['vehicle_status_retired',   '#9a5750']
+};
+const MAINT_STATUS = { open:['status_open','#8f7440'], closed:['status_closed','#5a7d63'] };
+const TASK_STATUS = {
+  scheduled:['task_scheduled','#5a7183'], running:['task_running','#8f7440'],
+  done:['task_done','#5a7d63'], canceled:['task_canceled','#9a5750']
+};
+const REQ_STATUS = {
+  new:['request_new','#5a7183'], review:['request_review','#8f7440'],
+  approved:['request_approved','#5a7d63'], rejected:['request_rejected','#9a5750'],
+  done:['request_done','#727c77']
+};
+const PRIORITY = { high:['priority_high','#9a5750'], medium:['priority_medium','#8f7440'], low:['priority_low','#727c77'] };
+const TRACK_STATUS = { moving:['moving','#5a7d63'], stopped:['stopped','#8f7440'], idle:['idle','#727c77'] };
+const MAINT_TYPE = { periodic:['type_periodic','#5a7d63'], other:['type_other','#8f7440'] };
+const DOC_TYPES = {
+  registration:['doc_registration','#5a7183'], insurance:['doc_insurance','#5a7d63'],
+  inspection:['doc_inspection','#8f7440'], other:['doc_other','#727c77']
+};
+const DRIVER_STATUS = { active:['vehicle_status_active','#5a7d63'], inactive:['vehicle_status_idle','#727c77'] };
+const VIOLATION_TYPE = { salik:['salik','#5a7183'], rta:['rta','#9a5750'] };
+const VIOLATION_STATUS = { paid:['violation_paid','#5a7d63'], unpaid:['violation_unpaid','#9a5750'] };
+const tag = (map, key) => { const v = map[key] || ['none','#727c77']; return `<span class="tag" style="color:${v[1]}">${t(v[0])}</span>`; };
+
+/* ═══════════════════════════════════════════════════════════════
+   🌐 Supabase Client
+   ═══════════════════════════════════════════════════════════════ */
+let sb = null;
+let currentUser = null;
+let currentProfile = null;
+
+const state = {
+  view: 'dashboard',
+  data: { vehicles:[], drivers:[], maintenance:[], tracking:[], trackingLog:[], tasks:[], requests:[], documents:[], fuel:[], violations:[] },
+  search: {},
+  selectedVehicleId: null,
+  detailTab: 'overview',
+  reportStart: monthStart(),
+  reportEnd: todayISO(),
+  violationsFilter: { type: '', status: '' }
+};
+
+const isAdmin = () => currentProfile && currentProfile.role === 'admin';
+
+/* ═══════════════════════════════════════════════════════════════
+   🔧 Supabase Helpers
+   ═══════════════════════════════════════════════════════════════ */
+async function loadAllData() {
+  const tables = ['vehicles','drivers','maintenance','tracking','trackingLog','tasks','requests','documents','fuel','violations'];
+  const results = await Promise.all(tables.map(t => sb.from(t).select('*')));
+  const data = {};
+  tables.forEach((t, i) => {
+    if (results[i].error) console.warn('[LOAD ' + t + ']', results[i].error.message);
+    data[t] = results[i].data || [];
+  });
+  return data;
+}
+async function sbInsert(table, record) {
+  const { error } = await sb.from(table).insert(record);
+  if (error) { console.error('[INSERT ' + table + ']', error); throw new Error(error.message); }
+}
+async function sbUpdate(table, id, updates) {
+  const { error } = await sb.from(table).update(updates).eq('id', id);
+  if (error) { console.error('[UPDATE ' + table + ']', error); throw new Error(error.message); }
+}
+async function sbDelete(table, id) {
+  const { error } = await sb.from(table).delete().eq('id', id);
+  if (error) { console.error('[DELETE ' + table + ']', error); throw new Error(error.message); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🔐 Auth
+   ═══════════════════════════════════════════════════════════════ */
+let authMode = 'signin';
+
+function updateAuthTexts() {
+  const isSignup = authMode === 'signup';
+  const title = $('#authTitle'); if (title) title.textContent = isSignup ? t('sign_up') : t('sign_in');
+  const sub = $('#authSubtitle'); if (sub) sub.textContent = isSignup ? t('sign_up_subtitle') : t('sign_in_subtitle');
+  const nameField = $('#authNameField'); if (nameField) nameField.classList.toggle('hidden', !isSignup);
+  const btn = $('#authSubmit'); if (btn) btn.textContent = isSignup ? t('create_account_btn') : t('login_btn');
+  const switchText = $('#authSwitchText'); if (switchText) switchText.textContent = isSignup ? t('have_account') : t('no_account');
+  const switchLink = $('#authSwitchLink'); if (switchLink) switchLink.textContent = isSignup ? t('switch_to_signin') : t('switch_to_signup');
+  updateStaticTexts();
+  hideAuthError();
+}
+
+function switchAuthMode(mode) {
+  authMode = mode;
+  updateAuthTexts();
+}
+
+function showAuthError(msg) {
+  const el = $('#authError');
+  if (el) { el.style.display = 'block'; el.textContent = msg; }
+  console.error('[AUTH]', msg);
+}
+function hideAuthError() { const el = $('#authError'); if (el) el.style.display = 'none'; }
+function showAuthDiag(html) { const el = $('#authDiag'); if (el) el.innerHTML = html; }
+function clearAuthDiag() { const el = $('#authDiag'); if (el) el.innerHTML = ''; }
+
+async function fetchProfile(userId) {
+  const { data, error } = await sb.from('profiles').select('*').eq('id', userId).maybeSingle();
+  if (error) { console.warn('[PROFILE]', error.message); return null; }
+  return data;
+}
+
+async function handleSession(session) {
+  if (!session || !session.user) { showAuthScreen(); return; }
+  currentUser = session.user;
+  let profile = await fetchProfile(session.user.id);
+  if (!profile) {
+    const { data: created, error } = await sb.from('profiles').insert({
+      id: session.user.id, email: session.user.email,
+      full_name: session.user.user_metadata?.full_name || session.user.email, role: 'user'
+    }).select().single();
+    if (error) {
+      console.warn('[PROFILE] create failed:', error.message);
+      profile = { id: session.user.id, email: session.user.email, full_name: session.user.email, role: 'user' };
+    } else { profile = created; }
+  }
+  currentProfile = profile;
+  if (profile.role !== 'admin') {
+    const email = session.user.email;
+    showAuthDiag(`<div class="banner" style="background:#fff8e1;border-color:#f0d477;color:#7c5a20">
+      <strong>Note:</strong> You are a regular user. If you expect admin privileges:
+      <pre style="background:#fef0c0;padding:6px 10px;border-radius:5px;margin-top:6px;font-size:11px;overflow-x:auto;direction:ltr">update public.profiles set role='admin' where email='${email}';</pre>
+    </div>`);
+  }
+  try {
+    state.data = await loadAllData();
+  } catch(e) { console.error(e); toast(t('error_occurred'), 'red'); }
+  showAppScreen();
+}
+
+async function doAuth() {
+  hideAuthError(); clearAuthDiag();
+  const email = ($('#authEmail')?.value || '').trim();
+  const password = $('#authPassword')?.value || '';
+  const fullName = ($('#authName')?.value || '').trim();
+  if (!email) { showAuthError(t('please_fill_email')); return; }
+  if (!password) { showAuthError(t('please_fill_password')); return; }
+  if (authMode === 'signup' && !fullName) { showAuthError(t('please_fill_name')); return; }
+  if (authMode === 'signup' && password.length < 6) { showAuthError(t('password_too_short')); return; }
+
+  const btn = $('#authSubmit');
+  if (btn) { btn.disabled = true; btn.textContent = t('signing_in'); }
+  try {
+    if (authMode === 'signup') {
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
+      if (error) throw error;
+      if (data.user && !data.session) { showAuthError(t('account_created')); return; }
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    }
+  } catch (e) {
+    let msg = e.message || t('error_occurred');
+    if (msg.includes('Invalid login credentials')) msg = t('invalid_credentials');
+    else if (msg.includes('already registered')) msg = t('email_registered');
+    else if (msg.includes('Email not confirmed')) msg = t('email_not_confirmed');
+    showAuthError(msg);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = authMode === 'signup' ? t('create_account_btn') : t('login_btn'); }
+  }
+}
+
+async function doSignOut() {
+  try { await sb.auth.signOut(); } catch(e){}
+  currentUser = null; currentProfile = null;
+  state.view = 'dashboard';
+  state.data = { vehicles:[], drivers:[], maintenance:[], tracking:[], trackingLog:[], tasks:[], requests:[], documents:[], fuel:[], violations:[] };
+  closeModal();
+  showAuthScreen();
+}
+
+function showAuthScreen() {
+  const auth = $('#authScreen'); if (auth) auth.style.display = 'flex';
+  const app = $('#appRoot'); if (app) app.classList.add('hidden');
+  updateAuthTexts();
+}
+function showAppScreen() {
+  const auth = $('#authScreen'); if (auth) auth.style.display = 'none';
+  const app = $('#appRoot'); if (app) app.classList.remove('hidden');
+  const nameEl = $('#headerUserName');
+  const roleEl = $('#headerUserRole');
+  if (nameEl) nameEl.textContent = currentProfile?.full_name || currentUser?.email || '—';
+  if (roleEl) roleEl.textContent = isAdmin() ? t('admin_role') : t('user_role');
+  updateStaticTexts();
+  render();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🧭 Navigation
+   ═══════════════════════════════════════════════════════════════ */
+const NAV_ITEMS = [
+  { view:'dashboard', label:'dashboard', icon:'dashboard', roles:['admin'] },
+  { view:'vehicles', label:'fleet', icon:'truck', roles:['admin','user'] },
+  { view:'maintenance', label:'maintenance', icon:'wrench', roles:['admin','user'] },
+  { view:'tracking', label:'tracking', icon:'pin', roles:['admin'] },
+  { view:'tasks', label:'tasks', icon:'clipboard', roles:['admin'] },
+  { view:'requests', label:'requests', icon:'inbox', roles:['admin'] },
+  { view:'violations', label:'violations', icon:'alert', roles:['admin'] },
+  { view:'documents', label:'documents', icon:'file', roles:['admin'] },
+  { view:'fuel', label:'fuel', icon:'droplet', roles:['admin','user'] },
+  { view:'reports', label:'reports', icon:'chart', roles:['admin'] },
+  { view:'users', label:'users', icon:'user', roles:['admin'] }
+];
+
+function renderNav() {
+  const role = currentProfile?.role || 'user';
+  const items = NAV_ITEMS.filter(it => it.roles.includes(role));
+  const nav = $('#appNav'); if (!nav) return;
+  const unpaid = (state.data.violations || []).filter(v => v.status === 'unpaid').length;
+  nav.innerHTML = items.map(it => {
+    let badge = '';
+    if (it.view === 'violations' && unpaid > 0) badge = `<span class="nav-badge">${unpaid}</span>`;
+    return `<button type="button" class="nav-btn ${state.view===it.view?'active':''}" onclick="window.navTo('${it.view}')">${icon(it.icon,15)}<span>${t(it.label)}</span>${badge}</button>`;
+  }).join('');
+}
+const allowedView = v => {
+  const it = NAV_ITEMS.find(x => x.view === v);
+  return it ? it.roles.includes(currentProfile?.role || 'user') : false;
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   🔧 Helpers
+   ═══════════════════════════════════════════════════════════════ */
+const getVehicle = id => state.data.vehicles.find(v => v.id === id);
+const vehicleLabel = id => { const v = getVehicle(id); return v ? `${v.make} ${v.model} — ${v.plate}` : '—'; };
+const matchAny = (n, ...fields) => !n || fields.some(f => String(f||'').toLowerCase().includes(String(n).toLowerCase()));
+const q = v => (state.search[v]||'').trim();
+const nextMaintNo = () => {
+  const nums = state.data.maintenance.map(m => parseInt((m.requestNo||'').replace(/\D/g,''),10)).filter(n => !isNaN(n));
+  return 'MT-' + String((nums.length?Math.max(...nums):0)+1).padStart(4,'0');
+};
+const itemsTotal = items => (items||[]).reduce((s,it) => s + Math.max(0, Number(it.price||0)*Number(it.qty||0) - Number(it.discount||0)), 0);
+
+function computeConsumption(fuelId) {
+  const current = state.data.fuel.find(f => f.id === fuelId);
+  if (!current || !current.odometer || !current.liters) return null;
+  const sameVehicle = state.data.fuel
+    .filter(f => f.vehicleId === current.vehicleId && f.odometer > 0)
+    .sort((a, b) => (a.date !== b.date) ? a.date.localeCompare(b.date) : (a.odometer||0)-(b.odometer||0));
+  const idx = sameVehicle.findIndex(f => f.id === fuelId);
+  if (idx <= 0) return null;
+  const distance = current.odometer - sameVehicle[idx-1].odometer;
+  if (distance <= 0) return null;
+  return distance / current.liters;
+}
+
+function vehicleStats(vehicleId) {
+  const fuel = state.data.fuel.filter(f => f.vehicleId === vehicleId);
+  const maint = state.data.maintenance.filter(m => m.vehicleId === vehicleId && m.status === 'closed');
+  const viol = state.data.violations.filter(v => v.vehicleId === vehicleId);
+  const totalFuel = fuel.reduce((s,f) => s + Number(f.cost||0), 0);
+  const totalLiters = fuel.reduce((s,f) => s + Number(f.liters||0), 0);
+  const totalMaint = maint.reduce((s,m) => s + Number(m.cost||0), 0);
+  const totalViol = viol.reduce((s,v) => s + Number(v.amount||0), 0);
+  let distance = 0;
+  if (fuel.length >= 2) {
+    const sorted = [...fuel].sort((a,b) => a.date.localeCompare(b.date));
+    distance = Math.max(0, (sorted[sorted.length-1].odometer||0) - (sorted[0].odometer||0));
+  }
+  const costPerKm = distance > 0 ? ((totalFuel + totalMaint + totalViol) / distance) : 0;
+  const unpaidViol = viol.filter(v => v.status === 'unpaid').reduce((s,v) => s + Number(v.amount||0), 0);
+  return { totalFuel, totalLiters, totalMaint, totalViol, totalCost: totalFuel + totalMaint + totalViol, distance, costPerKm, unpaidViol, fuelCount: fuel.length, maintCount: maint.length, violCount: viol.length };
+}
+
+function computeAlerts() {
+  if (!state.data) return [];
+  const { vehicles, requests, tasks, documents, drivers, violations } = state.data;
+  const out = [];
+  const today = todayISO();
+  vehicles.forEach(v => {
+    if (v.fuelLevel <= 25) out.push({ tone:'red', view:'fuel', title:`${t('fuel')} — ${v.plate}`, text:`${v.fuelLevel}%` });
+    const remain = Number(v.nextServiceKm) - Number(v.odometer);
+    if (v.nextServiceKm > 0 && remain <= 0) out.push({ tone:'red', view:'maintenance', title:`${t('maintenance')} — ${v.plate}`, text:`${fmtNum(v.odometer)} ${t('km')}` });
+    else if (v.nextServiceKm > 0 && remain <= 1500) out.push({ tone:'amber', view:'maintenance', title:`${t('maintenance')} — ${v.plate}`, text:`${fmtNum(remain)} ${t('km')}` });
+    const unpaid = violations.filter(vi => vi.vehicleId === v.id && vi.status === 'unpaid');
+    if (unpaid.length) out.push({ tone:'red', view:'violations', title:`${unpaid.length} ${t('violations')} — ${v.plate}`, text:money(unpaid.reduce((s,x) => s + Number(x.amount||0), 0)) });
+  });
+  const pending = requests.filter(r => ['new','review','approved'].includes(r.status));
+  if (pending.length) out.push({ tone:'blue', view:'requests', title:`${pending.length} ${t('pending_requests')}`, text:t('requests') });
+  const overdue = tasks.filter(t => t.status === 'scheduled' && t.endDate < today);
+  if (overdue.length) out.push({ tone:'amber', view:'tasks', title:`${overdue.length} ${t('tasks')}`, text:t('task_late') });
+  documents.forEach(d => {
+    const v = getVehicle(d.vehicleId);
+    const days = daysUntil(d.expiryDate);
+    if (days === null) return;
+    if (days < 0) out.push({ tone:'red', view:'documents', title:`${t('documents')} — ${t('doc_expired')}`, text:v?v.plate:'' });
+    else if (days <= 30) out.push({ tone:'amber', view:'documents', title:`${t('documents')} — ${t('doc_expiring')}`, text:`${v?v.plate:''} · ${days}d` });
+  });
+  drivers.forEach(dr => {
+    if (!dr.licenseExpiry) return;
+    const days = daysUntil(dr.licenseExpiry);
+    if (days === null) return;
+    if (days < 0) out.push({ tone:'red', view:'vehicles', title:`${t('license_expiry')} — ${dr.name}`, text:fmtDate(dr.licenseExpiry) });
+    else if (days <= 30) out.push({ tone:'amber', view:'vehicles', title:`${t('license_expiry')} — ${dr.name}`, text:`${days}d` });
+  });
+  return out;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🧩 UI Helpers
+   ═══════════════════════════════════════════════════════════════ */
+function pageHead(title, subtitle, actions) {
+  return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:24px">
+    <div><h1 style="font-size:21px;font-weight:600">${title}</h1><p style="color:#727c77;font-size:13px;margin-top:3px">${subtitle}</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${actions||''}</div>
+  </div>`;
+}
+function stat(label, value, sub) {
+  return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${value}</div>${sub?`<div class="stat-sub">${sub}</div>`:''}</div>`;
+}
+function fuelBar(level) {
+  const l = clamp(Number(level)||0, 0, 100);
+  const c = l <= 25 ? '#9a5750' : l <= 50 ? '#8f7440' : '#5a7d63';
+  return `<div class="fuel-bar"><div class="fuel-track"><div class="fuel-fill" style="width:${l}%;background:${c}"></div></div><span style="font-size:12px;color:#727c77">${l}%</span></div>`;
+}
+function field(label, name, value, opts) {
+  opts = opts || {};
+  const type = opts.type || 'text', required = opts.required, placeholder = opts.placeholder;
+  const min = opts.min, max = opts.max, step = opts.step, readonly = opts.readonly;
+  return `<label class="field"><label>${label}${required?' <em>*</em>':''}</label>
+    <input type="${type}" name="${name}" value="${esc(value??'')}" ${placeholder?`placeholder="${placeholder}"`:''} ${readonly?'readonly':''} ${min!==undefined?`min="${min}"`:''} ${max!==undefined?`max="${max}"`:''} ${step!==undefined?`step="${step}"`:''}>
+  </label>`;
+}
+function phoneField(label, name, value, opts) {
+  opts = opts || {};
+  return `<label class="field"><label>${label}${opts.required?' <em>*</em>':''}</label>
+    <input type="tel" name="${name}" value="${esc(normalizeNumber(value))}" placeholder="05XXXXXXXX" inputmode="numeric" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
+    <span style="font-size:11px;color:#9aa39e">10</span>
+  </label>`;
+}
+function selectField(label, name, map, value) {
+  const opts = Object.entries(map).map(([k,v]) => `<option value="${k}" ${k===value?'selected':''}>${t(v[0])}</option>`).join('');
+  return `<label class="field"><label>${label}</label><select name="${name}">${opts}</select></label>`;
+}
+function textareaField(label, name, value, placeholder) {
+  return `<label class="field full"><label>${label}</label><textarea name="${name}" placeholder="${placeholder||''}">${value??''}</textarea></label>`;
+}
+function vehicleSelect(value) {
+  const opts = state.data.vehicles.map(v => `<option value="${v.id}" ${v.id===value?'selected':''}>${v.plate} — ${v.make} ${v.model}</option>`).join('');
+  return `<label class="field"><label>${t('select_vehicle')} <em>*</em></label><select name="vehicleId">${opts}</select></label>`;
+}
+function emptyRow(cols, msg) {
+  return `<tr><td colspan="${cols}" style="padding:32px 20px;text-align:center;color:#727c77;font-size:13.5px">${msg || '—'}</td></tr>`;
+}
+
+function openModal(cfg) {
+  const root = $('#modalRoot'); if (!root) return;
+  const btnStyle = cfg.tone === 'danger'
+    ? 'background:#9a5750;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:13.5px;cursor:pointer'
+    : 'background:#4a6b5f;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:13.5px;cursor:pointer';
+  root.innerHTML = `<div class="modal-backdrop" onclick="if(event.target===this)window.closeModal()">
+    <div class="modal ${cfg.size==='lg'?'lg':''}">
+      <div class="modal-head">
+        <div><h3>${cfg.title}</h3>${cfg.subtitle?`<div class="sub">${cfg.subtitle}</div>`:''}</div>
+        <button type="button" class="icon-btn" onclick="window.closeModal()">${icon('x',18)}</button>
+      </div>
+      <form id="modalForm" class="modal-body" onsubmit="event.preventDefault()">${cfg.body}</form>
+      <div class="modal-foot">
+        ${cfg.footExtra||''}
+        <button type="button" class="btn-ghost" onclick="window.closeModal()">${cfg.cancelLabel || t('cancel')}</button>
+        <button type="button" id="modalSubmit" style="${btnStyle}">${cfg.submitLabel || t('save')}</button>
+      </div>
+    </div>
+  </div>`;
+  const form = $('#modalForm'); const btn = $('#modalSubmit');
+  const submit = async () => {
+    const fd = Object.fromEntries(new FormData(form).entries());
+    if (!cfg.onSubmit) { window.closeModal(); return; }
+    btn.disabled = true; const orig = btn.textContent; btn.textContent = '...';
+    try { const r = await cfg.onSubmit(fd, form); if (r !== false) window.closeModal(); }
+    catch (e) { console.error('[MODAL]', e); toast(e.message || t('error_occurred'), 'red'); }
+    finally { btn.disabled = false; btn.textContent = orig; }
+  };
+  btn.onclick = submit;
+  form.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); submit(); } });
+  setTimeout(() => form.querySelector('input:not([readonly]),select,textarea')?.focus(), 60);
+}
+function closeModal() { const r = $('#modalRoot'); if (r) r.innerHTML = ''; }
+function confirmDialog(title, msg, onConfirm, label) {
+  openModal({ title, body:`<p style="color:#4a544f;line-height:1.8;font-size:14px">${msg}</p>`, submitLabel:label || t('confirm'), tone:'danger', onSubmit: async () => { await onConfirm(); } });
+}
+function toast(msg, tone) {
+  tone = tone || 'green';
+  const box = $('#toasts'); if (!box) return;
+  const el = document.createElement('div');
+  el.className = 'toast ' + (tone === 'green' ? '' : tone);
+  el.innerHTML = `${icon(tone === 'red' ? 'alert' : 'check', 15)}<span>${esc(msg)}</span>`;
+  box.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   📋 Items & Files
+   ═══════════════════════════════════════════════════════════════ */
+function itemRowHTML(it) {
+  it = it || {};
+  const p = it.price ?? 0, qty = it.qty ?? 1, d = it.discount ?? 0;
+  const total = Math.max(0, p*qty - d);
+  return `<tr class="item-row">
+    <td><input type="text" class="item-desc" value="${esc(it.description||'')}"></td>
+    <td><input type="number" class="item-price" value="${p}" min="0" step="0.01"></td>
+    <td><input type="number" class="item-qty" value="${qty}" min="1"></td>
+    <td class="item-total">${total.toFixed(2)}</td>
+    <td><input type="number" class="item-disc" value="${d}" min="0" step="0.01"></td>
+    <td><button type="button" class="icon-btn danger item-remove">${icon('trash',13)}</button></td>
+  </tr>`;
+}
+function initItemsBlock(form) {
+  const body = form.querySelector('#itemsBody');
+  const addBtn = form.querySelector('#addItemBtn');
+  if (!body || !addBtn) return;
+  const recalc = () => {
+    const el = form.querySelector('#itemsGrandTotal');
+    if (!el) return;
+    let g = 0;
+    form.querySelectorAll('.item-row').forEach(row => {
+      const p = parseFloat(row.querySelector('.item-price').value) || 0;
+      const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+      const d = parseFloat(row.querySelector('.item-disc').value) || 0;
+      const tot = Math.max(0, p*qty - d);
+      row.querySelector('.item-total').textContent = tot.toFixed(2);
+      g += tot;
+    });
+    el.textContent = g.toFixed(2) + ' ' + t('currency');
+  };
+  addBtn.onclick = () => { body.insertAdjacentHTML('beforeend', itemRowHTML({})); recalc(); };
+  body.addEventListener('click', e => { const b = e.target.closest('.item-remove'); if (b) { b.closest('.item-row').remove(); recalc(); } });
+  body.addEventListener('input', recalc);
+  recalc();
+}
+function collectItems(form) {
+  return [...form.querySelectorAll('.item-row')].map(row => ({
+    description: row.querySelector('.item-desc').value.trim(),
+    price: parseFloat(row.querySelector('.item-price').value) || 0,
+    qty: parseFloat(row.querySelector('.item-qty').value) || 0,
+    discount: parseFloat(row.querySelector('.item-disc').value) || 0
+  })).filter(it => it.description || it.price > 0);
+}
+function fileFieldHTML(label, key, existing, required) {
+  const list = Array.isArray(existing) ? existing : [];
+  return `<div class="file-field"><label class="file-label">${label}${required?' <em>*</em>':''}<input type="file" accept="image/*,.pdf" multiple data-attach="${key}"></label><div class="file-list" data-filelist="${key}">${list.map(f => `<span class="file-chip">${esc(f)}<button type="button" data-rm-file="${key}">${icon('x',12)}</button></span>`).join('')}</div></div>`;
+}
+function singleFileFieldHTML(label, key, existing, required) {
+  return `<div class="file-field"><label class="file-label">${label}${required?' <em>*</em>':''}<input type="file" accept="image/*" data-single="${key}"></label><div class="file-list" data-filelist="${key}">${existing ? `<span class="file-chip">${esc(existing)}<button type="button" data-rm-file="${key}">${icon('x',12)}</button></span>` : ''}</div></div>`;
+}
+function initFileUploads(form) {
+  form.querySelectorAll('input[type=file][data-attach]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const key = inp.dataset.attach;
+      const list = form.querySelector(`[data-filelist="${key}"]`);
+      [...inp.files].forEach(f => {
+        const chip = document.createElement('span');
+        chip.className = 'file-chip';
+        chip.innerHTML = `${esc(f.name)}<button type="button" data-rm-file="${key}">${icon('x',12)}</button>`;
+        list.appendChild(chip);
+      });
+      inp.value = ''; inp.classList.remove('invalid');
+    });
+  });
+  form.querySelectorAll('input[type=file][data-single]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const key = inp.dataset.single;
+      const list = form.querySelector(`[data-filelist="${key}"]`);
+      list.innerHTML = '';
+      if (inp.files[0]) {
+        const chip = document.createElement('span');
+        chip.className = 'file-chip';
+        chip.innerHTML = `${esc(inp.files[0].name)}<button type="button" data-rm-file="${key}">${icon('x',12)}</button>`;
+        list.appendChild(chip);
+      }
+      inp.value = ''; inp.classList.remove('invalid');
+    });
+  });
+  form.addEventListener('click', e => { const rm = e.target.closest('[data-rm-file]'); if (rm) rm.closest('.file-chip').remove(); });
+}
+function validateFiles(form, key, min) {
+  const count = form.querySelectorAll(`[data-filelist="${key}"] .file-chip`).length;
+  if (count < min) { const inp = form.querySelector(`[data-attach="${key}"], [data-single="${key}"]`); if (inp) inp.classList.add('invalid'); return false; }
+  return true;
+}
+function collectFiles(form) {
+  const out = {};
+  form.querySelectorAll('[data-filelist]').forEach(list => {
+    out[list.dataset.filelist] = [...list.querySelectorAll('.file-chip')].map(c => { const btn = c.querySelector('button'); if (btn) btn.remove(); return c.textContent.trim(); });
+  });
+  return out;
+}
+function collectSingleFile(form, key) {
+  const files = collectFiles(form);
+  return (files[key] && files[key][0]) || '';
+}
+
+function exportCSV(filename, headers, rows) {
+  const escape = v => { const s = String(v ?? ''); if (s.includes(',') || s.includes('"') || s.includes('\n')) return '"' + s.replace(/"/g,'""') + '"'; return s; };
+  const csv = '\uFEFF' + [headers.map(escape).join(','), ...rows.map(r => r.map(escape).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  toast(t('saved') + ': ' + filename);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Dashboard
+   ═══════════════════════════════════════════════════════════════ */
+function renderDashboard() {
+  const d = state.data;
+  const active = d.vehicles.filter(v => v.status === 'active').length;
+  const maint = d.vehicles.filter(v => v.status === 'maintenance').length;
+  const month = todayISO().slice(0,7);
+  const monthCost = d.fuel.filter(f => f.date.startsWith(month)).reduce((s,f) => s + Number(f.cost||0), 0);
+  const openM = d.maintenance.filter(m => m.status === 'open').length;
+  const pending = d.requests.filter(r => ['new','review','approved'].includes(r.status)).length;
+  const unpaidViol = d.violations.filter(v => v.status === 'unpaid');
+  const unpaidTotal = unpaidViol.reduce((s,v) => s + Number(v.amount||0), 0);
+  const alerts = computeAlerts();
+  return pageHead(t('dashboard_title'), t('dashboard_sub') + ' · ' + fmtDate(todayISO())) + `
+    <div class="stat-grid">
+      ${stat(t('total_fleet'), d.vehicles.length, t('active_count', active))}
+      ${stat(t('in_maintenance'), maint, t('open_requests', openM))}
+      ${stat(t('pending_requests'), pending)}
+      ${stat(t('unpaid_violations'), unpaidViol.length, money(unpaidTotal))}
+      ${stat(t('month_fuel'), fmtNum(Math.round(monthCost)), t('currency'))}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="card"><div class="card-head"><h3>${t('alerts')} (${alerts.length})</h3></div>
+        <div class="card-body" style="max-height:400px;overflow:auto">
+          ${alerts.length ? alerts.slice(0,15).map(a => `<div style="padding:10px 0;border-bottom:1px solid #eef0ec;display:flex;gap:10px;align-items:flex-start"><span style="width:6px;height:6px;border-radius:50%;background:${a.tone==='red'?'#9a5750':a.tone==='amber'?'#8f7440':a.tone==='green'?'#5a7d63':'#5a7183'};margin-top:8px;flex:0 0 auto"></span><div><div style="font-size:13px;font-weight:500">${a.title}</div><div style="font-size:12px;color:#727c77;margin-top:2px">${a.text}</div></div></div>`).join('') : `<div style="padding:20px;text-align:center;color:#9aa39e">${t('no_alerts')}</div>`}
+        </div>
+      </div>
+      <div class="card"><div class="card-head"><h3>${t('fuel_levels')}</h3></div>
+        <div class="card-body">
+          ${[...d.vehicles].sort((a,b) => a.fuelLevel - b.fuelLevel).map(v => `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #eef0ec;cursor:pointer" onclick="window.openVehicle('${v.id}')"><div style="flex:1"><div style="font-weight:600;font-size:13px">${v.plate}</div><div style="font-size:12px;color:#727c77">${v.make} ${v.model}</div></div><div style="width:140px">${fuelBar(v.fuelLevel)}</div></div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Vehicles
+   ═══════════════════════════════════════════════════════════════ */
+function vehicleRows() {
+  const s = q('vehicles');
+  const list = state.data.vehicles.filter(v => matchAny(s, v.plate, v.make, v.model, v.driver, v.type));
+  if (!list.length) return emptyRow(7, t('none'));
+  return list.map(v => {
+    const r = v.nextServiceKm - v.odometer;
+    const hint = v.nextServiceKm > 0 ? (r <= 0 ? `<span style="color:#9a5750;font-size:12px">${fmtNum(Math.abs(r))} ${t('km')}</span>` : `<span style="color:#727c77;font-size:12px">${fmtNum(v.nextServiceKm)} ${t('km')}</span>`) : `<span style="color:#9aa39e;font-size:12px">—</span>`;
+    const unpaid = state.data.violations.filter(x => x.vehicleId === v.id && x.status === 'unpaid').length;
+    return `<tr class="clickable" onclick="if(!event.target.closest('button'))window.openVehicle('${v.id}')">
+      <td><div style="font-weight:600;font-size:13px">${v.make} ${v.model}</div><div style="color:#727c77;font-size:12px">${v.plate}</div></td>
+      <td style="font-size:13px">${v.type||'—'}</td>
+      <td style="font-size:13px">${v.driver||'—'}</td>
+      <td><div>${fmtNum(v.odometer)} ${t('km')}</div>${hint}</td>
+      <td>${fuelBar(v.fuelLevel)}</td>
+      <td>${tag(VEHICLE_STATUS, v.status)}${unpaid > 0 ? ` <span class="tag" style="color:#9a5750">${unpaid} ${t('violations')}</span>` : ''}</td>
+      <td class="actions" onclick="event.stopPropagation()">
+        ${isAdmin() ? `<button class="icon-btn" onclick="window.editVehicle('${v.id}')">${icon('edit',14)}</button><button class="icon-btn danger" onclick="window.deleteVehicle('${v.id}')">${icon('trash',14)}</button>` : `<span style="color:#9aa39e;font-size:12px">${t('readonly')}</span>`}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function driverRows() {
+  const s = q('drivers');
+  const list = state.data.drivers.filter(d => matchAny(s, d.name, d.phone, d.licenseNo, vehicleLabel(d.vehicleId)));
+  if (!list.length) return emptyRow(6, t('none'));
+  return list.map(d => {
+    const days = daysUntil(d.licenseExpiry);
+    const exp = days === null ? '—' : days < 0 ? `<span style="color:#9a5750">${Math.abs(days)}d</span>` : days <= 30 ? `<span style="color:#8f7440">${days}d</span>` : `<span style="color:#5a7d63">${t('doc_valid')}</span>`;
+    return `<tr>
+      <td><div style="font-weight:600;font-size:13px">${d.name}</div><div style="color:#727c77;font-size:12px">${d.licenseNo||''}</div></td>
+      <td style="font-size:13px;direction:ltr;text-align:end;font-variant-numeric:tabular-nums">${d.phone}</td>
+      <td style="font-size:13px">${vehicleLabel(d.vehicleId)}</td>
+      <td style="font-size:13px">${fmtDate(d.licenseExpiry)}</td>
+      <td style="font-size:13px">${exp}</td>
+      <td class="actions">${isAdmin()?`<button class="icon-btn" onclick="window.editDriver('${d.id}')">${icon('edit',14)}</button><button class="icon-btn danger" onclick="window.deleteDriver('${d.id}')">${icon('trash',14)}</button>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderVehicles() {
+  return pageHead(t('fleet_title'), t('fleet_sub', state.data.vehicles.length, state.data.drivers.length),
+    isAdmin() ? `<button class="btn-ghost" onclick="window.addVehicle()">${icon('plus',14)} ${t('add_vehicle')}</button><button class="btn-ghost" onclick="window.addDriver()">${icon('plus',14)} ${t('add_driver')}</button>` : '') + `
+    <div class="card"><div class="card-head"><h3>${t('vehicles')}</h3>
+      <div class="search-box">${icon('search',14)}<input placeholder="${t('search_vehicles')}" value="${esc(q('vehicles'))}" oninput="window.searchDo('vehicles',this.value)"></div>
+    </div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${t('vehicle')}</th><th>${t('type')}</th><th>${t('driver')}</th><th>${t('odometer')}</th><th>${t('fuel')}</th><th>${t('status')}</th><th></th></tr></thead><tbody id="tbody-vehicles">${vehicleRows()}</tbody></table></div></div>
+    <div class="card"><div class="card-head"><h3>${t('drivers')}</h3>
+      <div class="search-box">${icon('search',14)}<input placeholder="${t('search_drivers')}" value="${esc(q('drivers'))}" oninput="window.searchDo('drivers',this.value)"></div>
+    </div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${t('driver')}</th><th>${t('phone')}</th><th>${t('vehicle')}</th><th>${t('license_expiry')}</th><th>${t('status')}</th><th></th></tr></thead><tbody id="tbody-drivers">${driverRows()}</tbody></table></div></div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Vehicle Detail
+   ═══════════════════════════════════════════════════════════════ */
+function renderVehicleDetail() {
+  const v = getVehicle(state.selectedVehicleId);
+  if (!v) return pageHead('—','') + `<button class="btn-ghost" onclick="window.navTo('vehicles')">${t('back')}</button>`;
+  const stats = vehicleStats(v.id);
+  const driver = state.data.drivers.find(dr => dr.vehicleId === v.id);
+  const fuel = state.data.fuel.filter(f => f.vehicleId === v.id).sort((a,b) => b.date.localeCompare(a.date));
+  const maint = state.data.maintenance.filter(m => m.vehicleId === v.id).sort((a,b) => (b.maintenanceDate||'').localeCompare(a.maintenanceDate||''));
+  const docs = state.data.documents.filter(d => d.vehicleId === v.id);
+  const tasks = state.data.tasks.filter(t => t.vehicleId === v.id);
+  const viol = state.data.violations.filter(vi => vi.vehicleId === v.id);
+  const trackLog = state.data.trackingLog.filter(l => l.vehicleId === v.id).slice(0,20);
+  const tabs = [
+    { id:'overview', label:'overview' }, { id:'maintenance', label:'maintenance_tab', count:maint.length },
+    { id:'fuel', label:'fuel_tab', count:fuel.length }, { id:'violations', label:'violations_tab', count:viol.length },
+    { id:'documents', label:'documents_tab', count:docs.length }, { id:'tasks', label:'tasks_tab', count:tasks.length },
+    { id:'tracking', label:'tracking_tab' }
+  ];
+  const activeTab = state.detailTab || 'overview';
+  let content = '';
+
+  if (activeTab === 'overview') {
+    content = `<div class="stat-mini">
+      <div class="item"><div class="lbl">${t('cost_per_km')}</div><div class="val">${stats.costPerKm > 0 ? stats.costPerKm.toFixed(2) + ' ' + t('currency') : '—'}</div></div>
+      <div class="item"><div class="lbl">${t('total_cost')}</div><div class="val">${money(stats.totalCost)}</div></div>
+      <div class="item"><div class="lbl">${t('next_service')}</div><div class="val">${v.nextServiceKm > 0 ? fmtNum(Math.max(0, v.nextServiceKm - v.odometer)) + ' ' + t('km') : '—'}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px">
+      <div><h4 style="font-size:13px;font-weight:600;margin-bottom:10px">${t('driver_info')}</h4>
+        ${driver ? `<div style="background:#fafbf9;border:1px solid #eef0ec;border-radius:8px;padding:14px"><div style="font-weight:600">${driver.name}</div><div style="color:#727c77;font-size:12.5px;direction:ltr;text-align:end">${driver.phone}</div></div>` : `<div class="banner">${t('no_driver')}</div>`}
+      </div>
+      <div><h4 style="font-size:13px;font-weight:600;margin-bottom:10px">${t('financial_summary')}</h4>
+        <div style="background:#fafbf9;border:1px solid #eef0ec;border-radius:8px;padding:14px;font-size:13px">
+          <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#727c77">${t('fuel_cost')}</span><strong>${money(stats.totalFuel)}</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#727c77">${t('maintenance_cost')}</span><strong>${money(stats.totalMaint)}</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;color:#9a5750"><span>${t('violations_cost')}</span><strong>${money(stats.totalViol)}</strong></div>
+          <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid #e6e8e4;margin-top:4px"><span>${t('total_label')}</span><strong>${money(stats.totalCost)}</strong></div>
+        </div>
+      </div>
+    </div>`;
+  } else if (activeTab === 'maintenance') {
+    content = `<table class="data-table"><thead><tr><th>${t('request_no')}</th><th>${t('maintenance_type')}</th><th>${t('garage')}</th><th>${t('date')}</th><th>${t('cost')}</th><th>${t('status')}</th></tr></thead><tbody>${maint.length ? maint.map(m => `<tr class="clickable" onclick="window.viewMaint('${m.id}')"><td style="font-family:monospace;font-weight:600">${m.requestNo}</td><td>${tag(MAINT_TYPE, m.maintenanceType)}</td><td>${m.garageName||'—'}</td><td>${fmtDate(m.maintenanceDate)}</td><td>${money(m.cost)}</td><td>${tag(MAINT_STATUS, m.status)}</td></tr>`).join('') : emptyRow(6)}</tbody></table>`;
+  } else if (activeTab === 'fuel') {
+    content = `<table class="data-table"><thead><tr><th>${t('date')}</th><th>${t('fuel_liters')}</th><th>${t('fuel_cost')}</th><th>${t('odometer')}</th><th>${t('consumption_rate')}</th><th>${t('station')}</th></tr></thead><tbody>${fuel.length ? fuel.map(f => { const cons = computeConsumption(f.id); return `<tr><td>${fmtDate(f.date)}</td><td>${fmtNum(f.liters)} ${t('liter')}</td><td>${money(f.cost)}</td><td>${fmtNum(f.odometer)} ${t('km')}</td><td style="font-weight:600">${cons !== null ? cons.toFixed(2) + ' ' + t('km_per_liter') : '—'}</td><td>${f.station}</td></tr>`; }).join('') : emptyRow(6)}</tbody></table>`;
+  } else if (activeTab === 'violations') {
+    content = `<table class="data-table"><thead><tr><th>${t('date')}</th><th>${t('type')}</th><th>${t('description')}</th><th>${t('amount')}</th><th>${t('status')}</th></tr></thead><tbody>${viol.length ? viol.map(vi => `<tr><td>${fmtDate(vi.date)}</td><td>${tag(VIOLATION_TYPE, vi.type)}</td><td>${vi.description||'—'}</td><td>${money(vi.amount)}</td><td>${tag(VIOLATION_STATUS, vi.status)}</td></tr>`).join('') : emptyRow(5)}</tbody></table>`;
+  } else if (activeTab === 'documents') {
+    content = `<table class="data-table"><thead><tr><th>${t('doc_name')}</th><th>${t('type')}</th><th>${t('expiry_date')}</th><th>${t('status')}</th></tr></thead><tbody>${docs.length ? docs.map(d => { const days = daysUntil(d.expiryDate); const st = days === null ? '—' : days < 0 ? `<span style="color:#9a5750">${t('doc_expired')}</span>` : days <= 30 ? `<span style="color:#8f7440">${days}d</span>` : `<span style="color:#5a7d63">${t('doc_valid')}</span>`; return `<tr><td>${d.name}</td><td>${tag(DOC_TYPES, d.type)}</td><td>${fmtDate(d.expiryDate)}</td><td>${st}</td></tr>`; }).join('') : emptyRow(4)}</tbody></table>`;
+  } else if (activeTab === 'tasks') {
+    content = `<table class="data-table"><thead><tr><th>${t('task_title')}</th><th>${t('route')}</th><th>${t('period')}</th><th>${t('status')}</th></tr></thead><tbody>${tasks.length ? tasks.map(t2 => `<tr><td style="font-weight:600">${t2.title}</td><td>${t2.from} ${icon('arrowLeft',12)} ${t2.to}</td><td>${fmtDate(t2.startDate)} — ${fmtDate(t2.endDate)}</td><td>${tag(TASK_STATUS, t2.status)}</td></tr>`).join('') : emptyRow(4)}</tbody></table>`;
+  } else if (activeTab === 'tracking') {
+    content = `<table class="data-table"><thead><tr><th>${t('location')}</th><th>${t('speed')}</th><th>${t('status')}</th><th>${t('time')}</th></tr></thead><tbody>${trackLog.length ? trackLog.map(l => `<tr><td>${l.location}</td><td>${l.speed} ${t('km')}/h</td><td>${tag(TRACK_STATUS, l.status)}</td><td>${timeAgo(l.at)}</td></tr>`).join('') : emptyRow(4)}</tbody></table>`;
+  }
+
+  return `<div style="margin-bottom:14px"><button class="btn-ghost" onclick="window.navTo('vehicles')">${icon('arrowRight',14)} ${t('back_to_fleet')}</button></div>
+    <div class="detail-header">
+      <div class="detail-title">
+        <div class="avatar">${icon('truck',28)}</div>
+        <div style="flex:1"><h1>${v.make} ${v.model}</h1><div class="sub">${v.plate} · ${v.year||''} · ${tag(VEHICLE_STATUS, v.status)}</div></div>
+        <div style="text-align:end"><div style="font-size:11.5px;color:#727c77">${t('odometer')}</div><div style="font-weight:600;font-size:18px">${fmtNum(v.odometer)} ${t('km')}</div><div style="margin-top:6px">${fuelBar(v.fuelLevel)}</div></div>
+      </div>
+      <div class="detail-tabs">${tabs.map(tb => `<button class="detail-tab ${tb.id===activeTab?'active':''}" onclick="window.detailTab('${tb.id}')">${t(tb.label)}${tb.count !== undefined ? ` (${tb.count})` : ''}</button>`).join('')}</div>
+    </div>
+    <div class="card"><div class="card-body">${content}</div></div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Maintenance
+   ═══════════════════════════════════════════════════════════════ */
+function maintenanceRows() {
+  const s = q('maintenance');
+  const list = state.data.maintenance.filter(m => matchAny(s, m.requestNo, m.garageName, m.garageContactName, vehicleLabel(m.vehicleId))).sort((a,b) => (b.maintenanceDate||'').localeCompare(a.maintenanceDate||''));
+  if (!list.length) return emptyRow(8, t('none'));
+  return list.map(m => {
+    const v = getVehicle(m.vehicleId);
+    return `<tr>
+      <td style="font-weight:600;font-family:monospace">${m.requestNo||'—'}</td>
+      <td><div style="font-weight:600">${v?v.make+' '+v.model:'—'}</div><div style="color:#727c77;font-size:12px">${v?v.plate:''}</div></td>
+      <td>${m.garageName||'—'}</td>
+      <td>${fmtDate(m.maintenanceDate)}</td>
+      <td>${tag(MAINT_TYPE, m.maintenanceType)}</td>
+      <td style="font-weight:600">${money(m.cost)}</td>
+      <td>${tag(MAINT_STATUS, m.status)}</td>
+      <td class="actions">
+        <button class="icon-btn" onclick="window.viewMaint('${m.id}')" title="${t('view')}">${icon('eye',14)}</button>
+        ${m.status==='open'?`<button class="icon-btn" onclick="window.closeMaint('${m.id}')" title="${t('close')}">${icon('check',14)}</button>`:''}
+        ${isAdmin()&&m.status==='open'?`<button class="icon-btn" onclick="window.editMaint('${m.id}')">${icon('edit',14)}</button>`:''}
+        ${isAdmin()?`<button class="icon-btn danger" onclick="window.deleteMaint('${m.id}')">${icon('trash',14)}</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderMaintenance() {
+  const open = state.data.maintenance.filter(m => m.status === 'open').length;
+  const closed = state.data.maintenance.filter(m => m.status === 'closed').length;
+  const cost = state.data.maintenance.reduce((s,m) => s + Number(m.cost||0), 0);
+  return pageHead(t('maintenance_title'), t('maintenance_sub', state.data.maintenance.length, open, closed, money(cost)),
+    `<button class="btn-primary-sm" onclick="window.addMaint()">${icon('plus',14)} ${t('add_maintenance')}</button>`) + `
+    <div class="stat-grid">${stat(t('open'), open)}${stat(t('closed'), closed)}${stat(t('total_label'), fmtNum(Math.round(cost)), t('currency'))}</div>
+    <div class="card"><div class="card-head">
+      <div class="search-box">${icon('search',14)}<input placeholder="${t('search_maintenance')}" value="${esc(q('maintenance'))}" oninput="window.searchDo('maintenance',this.value)"></div>
+    </div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${t('request_no')}</th><th>${t('vehicle')}</th><th>${t('garage')}</th><th>${t('date')}</th><th>${t('maintenance_type')}</th><th>${t('cost')}</th><th>${t('status')}</th><th></th></tr></thead><tbody id="tbody-maintenance">${maintenanceRows()}</tbody></table></div></div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Fuel
+   ═══════════════════════════════════════════════════════════════ */
+function fuelRows() {
+  const s = q('fuel');
+  const list = state.data.fuel.filter(f => matchAny(s, f.station, vehicleLabel(f.vehicleId))).sort((a,b) => b.date.localeCompare(a.date));
+  if (!list.length) return emptyRow(10, t('none'));
+  return list.map(f => {
+    const v = getVehicle(f.vehicleId);
+    const cons = computeConsumption(f.id);
+    return `<tr>
+      <td><div style="font-weight:600">${v?v.make+' '+v.model:'—'}</div><div style="color:#727c77;font-size:12px">${v?v.plate:''}</div></td>
+      <td>${fmtDate(f.date)}</td>
+      <td>${fmtNum(f.liters)} ${t('liter')}</td>
+      <td>${f.pricePerLiter} ${t('currency')}</td>
+      <td style="font-weight:600">${money(f.cost)}</td>
+      <td>${fmtNum(f.odometer)} ${t('km')}</td>
+      <td style="font-weight:600;color:${cons!==null?(cons>=8?'#5a7d63':cons>=5?'#8f7440':'#9a5750'):'#9aa39e'};font-variant-numeric:tabular-nums">${cons!==null?cons.toFixed(2)+' '+t('km_per_liter'):'—'}</td>
+      <td>${f.station}</td>
+      <td>${f.receiptImage ? `<span class="file-chip" title="${esc(f.receiptImage)}">${icon('image',11)}</span>` : '—'}</td>
+      <td class="actions">${isAdmin()?`<button class="icon-btn danger" onclick="window.deleteFuel('${f.id}')">${icon('trash',14)}</button>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderFuel() {
+  const f = state.data.fuel;
+  const total = f.reduce((s,x) => s + Number(x.cost||0), 0);
+  const liters = f.reduce((s,x) => s + Number(x.liters||0), 0);
+  const month = todayISO().slice(0,7);
+  const monthCost = f.filter(x => x.date.startsWith(month)).reduce((s,x) => s + Number(x.cost||0), 0);
+  return pageHead(t('fuel_title'), t('fuel_sub', f.length, fmtNum(liters)),
+    isAdmin()?`<button class="btn-primary-sm" onclick="window.addFuel()">${icon('plus',14)} ${t('add_fuel')}</button>`:'') + `
+    <div class="stat-grid">${stat(t('fuel_month_cost'), fmtNum(Math.round(monthCost)), t('currency'))}${stat(t('fuel_liters'), fmtNum(liters))}${stat(t('fuel_total'), fmtNum(Math.round(total)), t('currency'))}</div>
+    <div class="card"><div class="card-head"><div class="search-box">${icon('search',14)}<input placeholder="${t('search')}..." value="${esc(q('fuel'))}" oninput="window.searchDo('fuel',this.value)"></div></div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${t('vehicle')}</th><th>${t('date')}</th><th>${t('fuel_liters')}</th><th>${t('fuel_price_per_liter')}</th><th>${t('fuel_cost')}</th><th>${t('odometer')}</th><th>${t('consumption_rate')}</th><th>${t('station')}</th><th>${t('receipt')}</th><th></th></tr></thead><tbody id="tbody-fuel">${fuelRows()}</tbody></table></div></div>`;
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════════
+   🎯 Router
+   ═══════════════════════════════════════════════════════════════ */
+const views = {
+  dashboard: renderDashboard, vehicles: renderVehicles,
+  'vehicle-detail': renderVehicleDetail,
+  maintenance: renderMaintenance, tracking: renderTracking,
+  tasks: renderTasks, requests: renderRequests,
+  violations: renderViolations, documents: renderDocuments,
+  fuel: renderFuel, reports: renderReports, users: renderUsers
+};
+  
+
+async function render() {
+  if (!currentProfile) return;
+  if (state.view !== 'vehicle-detail' && !allowedView(state.view)) state.view = 'vehicles';
+  renderNav();
+  try {
+    const fn = views[state.view] || renderVehicles;
+    const html = await fn();
+    const appView = $('#appView');
+    if (appView) appView.innerHTML = html;
+  } catch (e) {
+    console.error('[RENDER]', e);
+    const appView = $('#appView');
+    if (appView) appView.innerHTML = `<div style="padding:40px;text-align:center;color:#9a5750">${t('error_occurred')}: ${esc(e.message||'')}</div>`;
+  }
+  window.scrollTo({ top: 0 });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🌐 Window handlers
+   ═══════════════════════════════════════════════════════════════ */
+window.closeModal = closeModal;
+window.toggleLang = toggleLang;
+window.doSignOut = doSignOut;
+window.navTo = v => { if (!allowedView(v)) return; state.view = v; render(); };
+window.searchDo = (view, value) => {
+  state.search[view] = value;
+  const fn = bodyRenderers[view];
+  const tbody = document.getElementById('tbody-' + view);
+  if (fn && tbody) tbody.innerHTML = fn();
+};
+window.openVehicle = id => { state.selectedVehicleId = id; state.detailTab = 'overview'; state.view = 'vehicle-detail'; render(); };
+window.detailTab = t => { state.detailTab = t; render(); };
+
+/* ═══════════════════════════════════════════════════════════════
+   🚗 Vehicle CRUD
+   ═══════════════════════════════════════════════════════════════ */
+function vehicleForm(v) {
+  v = v || {};
+  return `<div class="grid-2">
+    ${field(t('make'),'make',v.make,{required:true})}
+    ${field(t('model'),'model',v.model,{required:true})}
+    ${field(t('plate'),'plate',v.plate,{required:true})}
+    ${field(t('year'),'year',v.year??new Date().getFullYear(),{type:'number'})}
+    ${field(t('type'),'type',v.type)}
+    ${field(t('driver'),'driver',v.driver==='—'?'':v.driver)}
+    ${field(t('odometer'),'odometer',v.odometer??0,{type:'number',min:0})}
+    ${field(t('tank'),'tank',v.tank??70,{type:'number',min:1})}
+    ${field(t('fuel')+' %','fuelLevel',v.fuelLevel??50,{type:'number',min:0,max:100})}
+    ${field(t('next_service'),'nextServiceKm',v.nextServiceKm??0,{type:'number',min:0})}
+    ${selectField(t('status'),'status',VEHICLE_STATUS,v.status||'active')}
+  </div>`;
+}
+window.addVehicle = () => {
+  if (!isAdmin()) return toast(t('not_authorized'),'red');
+  openModal({ title:t('add_vehicle'), body: vehicleForm(), submitLabel:t('add'), onSubmit: async fd => {
+    if (!fd.make?.trim()||!fd.model?.trim()||!fd.plate?.trim()) { toast(t('complete_fields_required'),'red'); return false; }
+    const rec = { id:uid('v'), make:fd.make.trim(), model:fd.model.trim(), plate:fd.plate.trim(), year:+fd.year||new Date().getFullYear(), type:fd.type?.trim()||'—', driver:fd.driver?.trim()||'—', odometer:+fd.odometer||0, tank:+fd.tank||70, fuelLevel:clamp(+fd.fuelLevel||0,0,100), nextServiceKm:+fd.nextServiceKm||0, status:fd.status||'active', createdAt: todayISO() };
+    try { await sbInsert('vehicles', rec); state.data.vehicles.push(rec); toast(t('added')); await render(); }
+    catch(e) { toast(e.message,'red'); return false; }
+  }});
+};
+window.editVehicle = id => {
+  if (!isAdmin()) return toast(t('not_authorized'),'red');
+  const v = state.data.vehicles.find(x=>x.id===id); if (!v) return;
+  openModal({ title:t('edit'), body: vehicleForm(v), submitLabel:t('save'), onSubmit: async fd => {
+    const u = { make:fd.make.trim(), model:fd.model.trim(), plate:fd.plate.trim(), year:+fd.year||2024, type:fd.type?.trim()||'—', driver:fd.driver?.trim()||'—', odometer:+fd.odometer||0, tank:+fd.tank||70, fuelLevel:clamp(+fd.fuelLevel||0,0,100), nextServiceKm:+fd.nextServiceKm||0, status:fd.status||'active' };
+    try { await sbUpdate('vehicles', id, u); Object.assign(v, u); toast(t('updated')); await render(); }
+    catch(e) { toast(e.message,'red'); return false; }
+  }});
+};
+window.deleteVehicle = id => {
+  if (!isAdmin()) return toast(t('not_authorized'),'red');
+  confirmDialog(t('delete'), t('confirm_delete'), async () => {
+    try { await sbDelete('vehicles', id); state.data.vehicles = state.data.vehicles.filter(x=>x.id!==id); toast(t('deleted'),'red'); await render(); }
+    catch(e) { toast(e.message,'red'); }
+  });
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   🚙 Driver CRUD
+   ═══════════════════════════════════════════════════════════════ */
+window.addDriver = () => {
+  if (!isAdmin()) return toast(t('not_authorized'),'red');
+  const opts = state.data.vehicles.map(v => `<option value="${v.id}">${v.plate}</option>`).join('');
+  openModal({ title:t('add_driver'), submitLabel:t('add'),
+    body:`<div class="grid-2">
+      ${field(t('full_name'),'name','',{required:true})}
+      ${phoneField(t('phone'),'phone','',{required:true})}
+      ${field(t('license_no'),'licenseNo','')}
+      ${field(t('license_expiry'),'licenseExpiry','',{type:'date',required:true})}
+      <label class="field"><label>${t('vehicle')}</label><select name="vehicleId"><option value="">—</option>${opts}</select></label>
+      ${selectField(t('status'),'status',DRIVER_STATUS,'active')}
+    </div>`,
+    onSubmit: async fd => {
+      if (!fd.name?.trim()||!isValidPhone(fd.phone)||!fd.licenseExpiry) { toast(t('phone_must_10'),'red'); return false; }
+      const rec = { id:uid('d'), name:fd.name.trim(), phone:normalizeNumber(fd.phone), licenseNo:fd.licenseNo?.trim()||'—', licenseExpiry:fd.licenseExpiry, vehicleId:fd.vehicleId||null, status:fd.status||'active' };
+      try { await sbInsert('drivers', rec); state.data.drivers.push(rec); toast(t('added')); await render(); }
+      catch(e) { toast(e.message,'red'); return false; }
+    }
+  });
+};
+window.editDriver = id => {
+  if (!isAdmin()) return toast(t('not_authorized'),'red');
+  const d = state.data.drivers.find(x=>x.id===id); if (!d) return;
+  const opts = state.data.vehicles.map(v => `<option value="${v.id}" ${v.id===d.vehicleId?'selected':''}>${v.plate}</option>`).join('');
+  openModal({ title:t('edit'), submitLabel:t('save'),
+    body:`<div class="grid-2">${field(t('full_name'),'name',d.name,{required:true})}${phoneField(t('phone'),'phone',d.phone,{required:true})}${field(t('license_no'),'licenseNo',d.licenseNo)}${field(t('license_expiry'),'licenseExpiry',d.licenseExpiry,{type:'date',required:true})}<label class="field"><label>${t('vehicle')}</label><select name="vehicleId"><option value="">—</option>${opts}</select></label>${selectField(t('status'),'status',DRIVER_STATUS,d.status||'active')}</div>`,
+    onSubmit: async fd => {
+      if (!isValidPhone(fd.phone)) { toast(t('phone_must_10'),'red'); return false; }
+      const u = { name:fd.name.trim(), phone:normalizeNumber(fd.phone), licenseNo:fd.licenseNo?.trim()||'—', licenseExpiry:fd.licenseExpiry, vehicleId:fd.vehicleId||null, status:fd.status||'active' };
+      try { await sbUpdate('drivers', id, u); Object.assign(d, u); toast(t('updated')); await render(); }
+      catch(e) { toast(e.message,'red'); return false; }
+    }
+  });
+};
+window.deleteDriver = id => {
+  if (!isAdmin()) return toast(t('not_authorized'),'red');
+  confirmDialog(t('delete'), t('confirm_delete'), async () => {
+    try { await sbDelete('drivers', id); state.data.drivers = state.data.drivers.filter(x=>x.id!==id); toast(t('deleted'),'red'); await render(); }
+    catch(e) { toast(e.message,'red'); }
+  });
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   🔧 Maintenance Stage 1
+   ═══════════════════════════════════════════════════════════════ */
+function maintStage1Form(m) {
+  m = m || {};
+  const type = m.maintenanceType || 'periodic';
+  const items = m.items || [];
+  const att = m.attachments || { damaged:[], quote:[] };
+  return `<div class="banner">${t('stage_1_open')}</div>
+    <div class="form-section"><h4>${icon('clipboard',14)} ${t('request_info')}</h4><div class="grid-2">
+      ${field(t('request_no_label'),'requestNo',m.requestNo||nextMaintNo(),{readonly:true})}
+      ${vehicleSelect(m.vehicleId)}
+    </div></div>
+    <div class="form-section"><h4>${icon('wrench',14)} ${t('garage_info')}</h4><div class="grid-2">
+      ${field(t('garage_name'),'garageName',m.garageName,{required:true})}
+      ${field(t('garage_address'),'garageAddress',m.garageAddress,{required:true})}
+      ${field(t('garage_contact'),'garageContactName',m.garageContactName,{required:true})}
+      ${phoneField(t('garage_phone'),'garageContactPhone',m.garageContactPhone,{required:true})}
+    </div></div>
+    <div class="form-section"><h4>${icon('calendar',14)} ${t('delivery_dates')}</h4><div class="grid-2">
+      ${field(t('maintenance_date'),'maintenanceDate',m.maintenanceDate||todayISO(),{type:'date',required:true})}
+      <div></div>
+      ${field(t('delivery_date'),'deliveryDate',m.deliveryDate||'',{type:'date',required:true})}
+      ${field(t('delivery_time'),'deliveryTime',m.deliveryTime||'',{type:'time',required:true})}
+    </div></div>
+    <div class="form-section"><h4>${icon('phone',14)} ${t('employee_info')}</h4><div class="grid-2">
+      ${field(t('employee_name'),'employeeName',m.employeeName,{required:true})}
+      ${phoneField(t('employee_phone'),'employeePhone',m.employeePhone,{required:true})}
+    </div></div>
+    <div class="form-section"><h4>${icon('tag',14)} ${t('maintenance_type_label')}</h4>
+      <div class="radio-row">
+        <label><input type="radio" name="maintenanceType" value="periodic" ${type==='periodic'?'checked':''}> ${t('type_periodic')}</label>
+        <label><input type="radio" name="maintenanceType" value="other" ${type==='other'?'checked':''}> ${t('type_other')}</label>
+      </div>
+      <div id="itemsWrap" class="${type==='other'?'':'hidden'}">
+        <div class="items-head"><span style="font-size:12.5px;color:#727c77">${t('items_section')}</span><button type="button" class="btn-ghost btn-sm" id="addItemBtn">${icon('plus',12)} ${t('add_item')}</button></div>
+        <div class="items-wrap"><table class="items-table"><thead><tr><th>${t('item_desc')}</th><th>${t('item_price')}</th><th>${t('item_qty')}</th><th>${t('item_total')}</th><th>${t('item_discount')}</th><th></th></tr></thead><tbody id="itemsBody">${items.map(itemRowHTML).join('') || itemRowHTML({})}</tbody></table></div>
+        <div class="items-total">${t('grand_total')}: <strong id="itemsGrandTotal">0.00 ${t('currency')}</strong></div>
+      </div>
+    </div>
+    <div class="form-section">${textareaField(t('notes'),'notes',m.notes,'')}</div>
+    <div class="form-section"><h4>${icon('file',14)} ${t('attachments_required')}</h4>
+      ${fileFieldHTML(t('damaged_parts'),'damaged',att.damaged,true)}
+      ${fileFieldHTML(t('quote_invoice'),'quote',att.quote,true)}
+    </div>`;
+}
+function wireMaintTypeToggle(form) {
+  form.querySelectorAll('input[name=maintenanceType]').forEach(r => {
+    r.onchange = () => {
+      const o = form.querySelector('input[name=maintenanceType]:checked').value === 'other';
+      form.querySelector('#itemsWrap').classList.toggle('hidden', !o);
+    };
+  });
+}
+window.addMaint = () => {
+  openModal({
+    title:t('add_maintenance'), body: maintStage1Form(), size:'lg', submitLabel:t('save'),
+    onSubmit: async (fd, form) => {
+      const required = ['vehicleId','garageName','garageAddress','garageContactName','garageContactPhone','maintenanceDate','deliveryDate','deliveryTime','employeeName','employeePhone'];
+      let ok = true;
+      form.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+      required.forEach(n => { const el = form.querySelector(`[name="${n}"]`); if (el && !el.value.trim()) { el.classList.add('invalid'); ok = false; } });
+      if (!isValidPhone(fd.garageContactPhone)||!isValidPhone(fd.employeePhone)) { toast(t('phone_must_10'),'red'); ok = false; }
+      const type = fd.maintenanceType || 'periodic';
+      if (type === 'other' && !collectItems(form).length) { toast(t('add_item_required'),'red'); ok = false; }
+      if (!validateFiles(form,'damaged',1)) { toast(t('attach_damaged_required'),'red'); ok = false; }
+      if (!validateFiles(form,'quote',1)) { toast(t('attach_quote_required'),'red'); ok = false; }
+      if (!ok) { toast(t('complete_fields_required'),'red'); return false; }
+      const files = collectFiles(form);
+      const rec = {
+        id: uid('m'), requestNo: fd.requestNo || nextMaintNo(),
+        vehicleId: fd.vehicleId, garageName: fd.garageName.trim(), garageAddress: fd.garageAddress.trim(),
+        garageContactName: fd.garageContactName.trim(), garageContactPhone: normalizeNumber(fd.garageContactPhone),
+        maintenanceDate: fd.maintenanceDate, deliveryDate: fd.deliveryDate, deliveryTime: fd.deliveryTime,
+        receiptDate: null, receiptTime: null,
+        employeeName: fd.employeeName.trim(), employeePhone: normalizeNumber(fd.employeePhone),
+        maintenanceType: type, items: type==='other'?collectItems(form):[],
+        finalItems: [], notes: fd.notes?.trim()||'', closeNotes: '', acknowledged: false,
+        attachments: { damaged: files.damaged||[], quote: files.quote||[], replaced:[], invoice:[] },
+        odometer: 0, cost: 0, status:'open', stage:'open', closedAt:null, requestId:null
+      };
+      try {
+        await sbInsert('maintenance', rec);
+        state.data.maintenance.push(rec);
+        const v = getVehicle(fd.vehicleId);
+        if (v) { await sbUpdate('vehicles', v.id, { status:'maintenance' }); v.status = 'maintenance'; }
+        toast(t('request_opened')); await render();
+      } catch(e) { toast(e.message,'red'); return false; }
+    }
+  });
+  const form = $('#modalForm');
+  if (form) { initItemsBlock(form); initFileUploads(form); wireMaintTypeToggle(form); }
+};
+
+window.editMaint = id => {
+  if (!isAdmin()) return toast(t('not_authorized'),'red');
+  const m = state.data.maintenance.find(x=>x.id===id); if (!m || m.status!=='open') return;
+  openModal({
+    title:t('edit'), subtitle:m.requestNo, body: maintStage1Form(m), size:'lg', submitLabel:t('save'),
+    onSubmit: async (fd, form) => {
+      if (!isValidPhone(fd.garageContactPhone)||!isValidPhone(fd.employeePhone)) { toast(t('phone_must_10'),'red'); return false; }
+      const type = fd.maintenanceType || 'periodic';
+      const files = collectFiles(form);
+      const u = {
+        garageName: fd.garageName.trim(), garageAddress: fd.garageAddress.trim(),
+        garageContactName: fd.garageContactName.trim(), garageContactPhone: normalizeNumber(fd.garageContactPhone),
+        maintenanceDate: fd.maintenanceDate, deliveryDate: fd.deliveryDate, deliveryTime: fd.deliveryTime,
+        employeeName: fd.employeeName.trim(), employeePhone: normalizeNumber(fd.employeePhone),
+        maintenanceType: type, items: type==='other'?collectItems(form):[],
+        notes: fd.notes?.trim()||'',
+        attachments: { damaged: files.damaged||[], quote: files.quote||[], replaced: m.attachments?.replaced||[], invoice: m.attachments?.invoice||[] }
+      };
+      try { await sbUpdate('maintenance', id, u); Object.assign(m, u); toast(t('updated')); await render(); }
+      catch(e) { toast(e.message,'red'); return false; }
+    }
+  });
+  const form = $('#modalForm');
+  if (form) { initItemsBlock(form); initFileUploads(form); wireMaintTypeToggle(form); }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   🔧 Maintenance Stage 2
+   ═══════════════════════════════════════════════════════════════ */
+window.closeMaint = id => {
+  const m = state.data.maintenance.find(x=>x.id===id); if (!m || m.status !== 'open') return;
+  const type = m.maintenanceType;
+  const finalItems = (m.finalItems && m.finalItems.length) ? m.finalItems : (m.items || []);
+  const att = m.attachments || {};
+  const body = `<div class="banner"><strong>${t('stage_2_close')} ${m.requestNo}.</strong></div>
+    <div class="form-section"><h4>${icon('calendar',14)} ${t('receipt_date')}</h4><div class="grid-2">
+      ${field(t('receipt_date'),'receiptDate',m.receiptDate||todayISO(),{type:'date',required:true})}
+      ${field(t('receipt_time'),'receiptTime',m.receiptTime||'',{type:'time',required:true})}
+      ${field(t('receipt_reading'),'odometer',m.odometer||'',{type:'number',required:true})}
+    </div></div>
+    ${type === 'other' ? `
+      <div class="form-section"><h4>${t('final_items')}</h4>
+        <div class="items-head"><span style="font-size:12.5px;color:#727c77">${t('final_items_hint')}</span><button type="button" class="btn-ghost btn-sm" id="addItemBtn">${icon('plus',12)} ${t('add_item')}</button></div>
+        <div class="items-wrap"><table class="items-table"><thead><tr><th>${t('item_desc')}</th><th>${t('item_price')}</th><th>${t('item_qty')}</th><th>${t('item_total')}</th><th>${t('item_discount')}</th><th></th></tr></thead><tbody id="itemsBody">${finalItems.map(itemRowHTML).join('') || itemRowHTML({})}</tbody></table></div>
+        <div class="items-total">${t('grand_total')}: <strong id="itemsGrandTotal">0.00 ${t('currency')}</strong></div>
+      </div>` : `
+      <div class="form-section"><h4>${t('final_cost')}</h4>${field(t('final_cost_label'),'periodicCost',m.cost||'',{type:'number',required:true})}</div>`}
+    <div class="form-section"><h4>${icon('file',14)} ${t('final_attachments')}</h4>
+      ${fileFieldHTML(t('replaced_parts'),'replaced',att.replaced||[],true)}
+      ${fileFieldHTML(t('final_invoice'),'invoice',att.invoice||[],true)}
+    </div>
+    <div class="form-section">${textareaField(t('close_notes'),'closeNotes',m.closeNotes||'','')}</div>
+    <div class="form-section"><h4>${icon('check',14)} ${t('acknowledgement')}</h4>
+      <label class="checkbox-field" id="ackWrap"><input type="checkbox" name="acknowledged"><span>${t('acknowledgement_text')}</span></label>
+    </div>`;
+  openModal({
+    title:t('close'), subtitle:m.requestNo, body, size:'lg', submitLabel:t('close'),
+    onSubmit: async (fd, form) => {
+      const required = ['receiptDate','receiptTime','odometer'];
+      if (type === 'periodic') required.push('periodicCost');
+      let ok = true;
+      form.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+      required.forEach(n => { const el = form.querySelector(`[name="${n}"]`); if (el && !el.value.trim()) { el.classList.add('invalid'); ok = false; } });
+      if (fd.acknowledged !== 'on') { toast(t('acknowledge_required'),'red'); form.querySelector('#ackWrap')?.classList.add('invalid'); ok = false; }
+      if (type === 'other' && !collectItems(form).length) { toast(t('add_item_required'),'red'); ok = false; }
+      if (!validateFiles(form,'replaced',1)) { toast(t('attach_replaced_required'),'red'); ok = false; }
+      if (!validateFiles(form,'invoice',1)) { toast(t('attach_invoice_required'),'red'); ok = false; }
+      if (!ok) return false;
+      const files = collectFiles(form);
+      let cost = 0, finalItems = [];
+      if (type === 'other') { finalItems = collectItems(form); cost = itemsTotal(finalItems); }
+      else cost = +fd.periodicCost || 0;
+      const u = {
+        receiptDate: fd.receiptDate, receiptTime: fd.receiptTime,
+        odometer: +fd.odometer || m.odometer,
+        closeNotes: fd.closeNotes?.trim()||'', acknowledged: true,
+        attachments: { damaged: m.attachments?.damaged||[], quote: m.attachments?.quote||[], replaced: files.replaced||[], invoice: files.invoice||[] },
+        finalItems, cost, status:'closed', stage:'closed', closedAt: todayISO()
+      };
+      try {
+        await sbUpdate('maintenance', id, u);
+        Object.assign(m, u);
+        const v = getVehicle(m.vehicleId);
+        if (v) {
+          const vu = { status:'active', odometer: Math.max(v.odometer, +fd.odometer||0), nextServiceKm: Math.max(v.odometer, +fd.odometer||0)+5000 };
+          await sbUpdate('vehicles', v.id, vu);
+          Object.assign(v, vu);
+        }
+        toast(t('request_closed')); await render();
+      } catch(e) { toast(e.message,'red'); return false; }
+    }
+  });
+  const form = $('#modalForm');
+  if (form) { if (m.maintenanceType === 'other') initItemsBlock(form); initFileUploads(form); }
+};
+window.viewMaint = id => {
+  const m = state.data.maintenance.find(x=>x.id===id); if (!m) return;
+  const v = getVehicle(m.vehicleId);
+  const items = (m.status==='closed' && m.finalItems?.length) ? m.finalItems : (m.items||[]);
+  const att = m.attachments||{};
+  const itemRows = items.map((it,i) => `<tr><td>${i+1}</td><td>${esc(it.description)||'—'}</td><td>${it.price}</td><td>${it.qty}</td><td>${it.discount}</td><td>${Math.max(0,it.price*it.qty-it.discount).toFixed(2)}</td></tr>`).join('');
+  const list = arr => arr?.length ? arr.map(f=>`<span class="file-chip">${esc(f)}</span>`).join('') : '<span style="color:#9aa39e;font-size:12px">—</span>';
+  openModal({
+    title:`${t('pdf_title')} ${m.requestNo}`, subtitle: v?`${v.make} ${v.model} — ${v.plate}`:'', size:'lg', submitLabel:t('close'), cancelLabel:'',
+    body: `<div class="detail-grid">
+        <div><div class="lbl">${t('garage')}</div>${m.garageName||'—'}</div>
+        <div><div class="lbl">${t('garage_address')}</div>${m.garageAddress||'—'}</div>
+        <div><div class="lbl">${t('garage_contact')}</div>${m.garageContactName||'—'} · ${m.garageContactPhone||''}</div>
+        <div><div class="lbl">${t('employee_name')}</div>${m.employeeName||'—'} · ${m.employeePhone||''}</div>
+        <div><div class="lbl">${t('maintenance_date')}</div>${fmtDate(m.maintenanceDate)}</div>
+        <div><div class="lbl">${t('maintenance_type')}</div>${tag(MAINT_TYPE, m.maintenanceType)}</div>
+        <div><div class="lbl">${t('delivery_date')}</div>${fmtDate(m.deliveryDate)} ${m.deliveryTime||''}</div>
+        <div><div class="lbl">${t('receipt_date')}</div>${fmtDate(m.receiptDate)} ${m.receiptTime||''}</div>
+        <div><div class="lbl">${t('odometer')}</div>${fmtNum(m.odometer)} ${t('km')}</div>
+        <div><div class="lbl">${t('cost')}</div><strong>${money(m.cost)}</strong></div>
+      </div>
+      ${itemRows ? `<div class="form-section"><h4>${t('final_items')}</h4><div class="items-wrap"><table class="items-table"><thead><tr><th>#</th><th>${t('item_desc')}</th><th>${t('item_price')}</th><th>${t('item_qty')}</th><th>${t('item_discount')}</th><th>${t('item_total')}</th></tr></thead><tbody>${itemRows}</tbody></table></div></div>` : ''}
+      <div class="form-section"><h4>${t('attachments_required')}</h4>
+        <div style="font-size:12px;color:#727c77">${t('damaged_parts')}</div><div class="file-list">${list(att.damaged)}</div>
+        <div style="font-size:12px;color:#727c77;margin-top:10px">${t('quote_invoice')}</div><div class="file-list">${list(att.quote)}</div>
+        <div style="font-size:12px;color:#727c77;margin-top:10px">${t('replaced_parts')}</div><div class="file-list">${list(att.replaced)}</div>
+        <div style="font-size:12px;color:#727c77;margin-top:10px">${t('final_invoice')}</div><div class="file-list">${list(att.invoice)}</div>
+      </div>
+      ${m.acknowledged ? `<div class="form-section"><span class="tag" style="color:#5a7d63">✓ ${t('acknowledgement')}</span></div>` : ''}`
+  });
+};
+window.deleteMaint = id => {
+  if (!isAdmin()) return toast(t('not_authorized'),'red');
+  confirmDialog(t('delete'), t('confirm_delete'), async () => {
+    try { await sbDelete('maintenance', id); state.data.maintenance = state.data.maintenance.filter(x=>x.id!==id); toast(t('deleted'),'red'); await render(); }
+    catch(e) { toast(e.message,'red'); }
+  });
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   ⛽ Fuel
+   ═══════════════════════════════════════════════════════════════ */
+window.addFuel = () => {
+  if (!isAdmin()) return toast(t('not_authorized'),'red');
+  openModal({
+    title:t('fuel_add_title'), submitLabel:t('save'),
+    body:`<div class="grid-2">
+      ${vehicleSelect()}
+      ${field(t('fuel_date'),'date',todayISO(),{type:'date',required:true})}
+      ${field(t('fuel_liters_input'),'liters','',{type:'number',min:1,step:'0.1',required:true})}
+      ${field(t('fuel_price_input'),'pricePerLiter',3.15,{type:'number',step:'0.01'})}
+      ${field(t('fuel_odometer_input'),'odometer','',{type:'number',required:true})}
+      ${field(t('station_input'),'station','')}
+    </div>
+    <div class="form-section">${singleFileFieldHTML(t('receipt_image'),'receipt','',false)}</div>`,
+    onSubmit: async fd => {
+      const liters = +fd.liters;
+      if (!fd.vehicleId||!liters||!fd.odometer) { toast(t('complete_fields_required'),'red'); return false; }
+      const receipt = collectSingleFile($('#modalForm'), 'receipt');
+      const rec = {
+        id:uid('f'), vehicleId:fd.vehicleId, date:fd.date||todayISO(),
+        liters, pricePerLiter:+fd.pricePerLiter||3.15,
+        cost: Math.round(liters*(+fd.pricePerLiter||3.15)*100)/100,
+        odometer: +fd.odometer,
+        station: fd.station?.trim() || '—',
+        receiptImage: receipt || ''
+      };
+      try {
+        await sbInsert('fuel', rec);
+        state.data.fuel.push(rec);
+        const v = getVehicle(fd.vehicleId);
+        if (v) {
+          const added = Math.round((liters/(v.tank||70))*100);
+          const vu = { odometer: Math.max(v.odometer, +fd.odometer), fuelLevel: clamp(v.fuelLevel + added, 0, 100) };
+          await sbUpdate('vehicles', v.id, vu);
+          Object.assign(v, vu);
+        }
+        toast(t('saved')); await render();
+      } catch(e) { toast(e.message,'red'); return false; }
+    }
+  });
+  const form = $('#modalForm'); if (form) initFileUploads(form);
+};
+window.deleteFuel = id => {
+  if (!isAdmin()) return toast(t('not_authorized'),'red');
+  confirmDialog(t('delete'), t('confirm_delete'), async () => {
+    try { await sbDelete('fuel', id); state.data.fuel = state.data.fuel.filter(x=>x.id!==id); toast(t('deleted'),'red'); await render(); }
+    catch(e) { toast(e.message,'red'); }
+  });
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   🚀 Init
+   ═══════════════════════════════════════════════════════════════ */
+function attachAuthListeners() {
+  applyDirection();
+  updateLangButtons();
+  updateAuthTexts();
+
+  // Logo
+  const authLogo = $('#authLogo'); if (authLogo) authLogo.innerHTML = renderLogo('lg');
+  const headerLogo = $('#headerLogo'); if (headerLogo) headerLogo.innerHTML = renderLogo('md');
+
+  // Supabase
+  if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+    showAuthError('Supabase library not loaded. Check your internet connection.');
+    return;
+  }
+  if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('YOUR_ANON')) {
+    showAuthError('⚠️ Set SUPABASE_ANON_KEY in the code first.');
+    return;
+  }
+  try {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch(e) {
+    showAuthError('Supabase init error: ' + e.message);
+    return;
+  }
+
+  // Language toggle buttons
+  const authLangBtn = $('#authLangBtn'); if (authLangBtn) authLangBtn.addEventListener('click', toggleLang);
+  const appLangBtn = $('#appLangBtn'); if (appLangBtn) appLangBtn.addEventListener('click', toggleLang);
+  const signoutBtn = $('#signoutBtn'); if (signoutBtn) signoutBtn.addEventListener('click', doSignOut);
+
+  // Auth submit
+  const submit = $('#authSubmit');
+  if (submit) submit.addEventListener('click', doAuth);
+  const switchLink = $('#authSwitchLink');
+  if (switchLink) switchLink.addEventListener('click', e => { e.preventDefault(); switchAuthMode(authMode === 'signin' ? 'signup' : 'signin'); });
+
+  ['authEmail','authPassword','authName'].forEach(id => {
+    const el = $('#'+id);
+    if (!el) return;
+    el.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      if (id === 'authEmail') $('#authPassword')?.focus();
+      else doAuth();
+    });
+  });
+
+  // Auth state
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT' || !session) {
+      currentUser = null; currentProfile = null;
+      showAuthScreen();
+    } else if (['SIGNED_IN','INITIAL_SESSION','TOKEN_REFRESHED'].includes(event)) {
+      if (!currentUser || currentUser.id !== session.user.id) {
+        handleSession(session).catch(e => {
+          console.error('[HANDLE SESSION]', e);
+          showAuthError('Failed: ' + e.message);
+        });
+      }
+    }
+  });
+
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if (session) handleSession(session).catch(e => showAuthError('Failed: ' + e.message));
+    else showAuthScreen();
+  }).catch(e => showAuthError('Connection failed: ' + e.message));
+}
+/* ═══════════════════════════════════════════════════════════════
+   ⭐ PART 2 — باقي الواجهات و CRUD
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Tracking
+   ═══════════════════════════════════════════════════════════════ */
+function renderTracking() {
+  const d = state.data;
+  const spots = [{top:'26%',left:'24%'},{top:'54%',left:'40%'},{top:'36%',left:'66%'},{top:'70%',left:'74%'},{top:'20%',left:'82%'},{top:'76%',left:'28%'}];
+  const pins = d.tracking.map((t,i) => {
+    const s = spots[i%6]; const v = getVehicle(t.vehicleId);
+    const color = t.zone ? '#8f7440' : t.status === 'moving' ? '#5a7d63' : '#727c77';
+    return `<div class="map-pin" style="top:${s.top};left:${s.left}"><div class="map-dot" style="background:${color}"></div><span>${v?v.plate:'—'}</span></div>`;
+  }).join('');
+  const live = d.tracking.map(t2 => `<div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid #eef0ec"><div style="flex:1"><div style="font-weight:600">${vehicleLabel(t2.vehicleId)}</div><div style="color:#727c77;font-size:12px">${t2.location}</div></div><div style="text-align:end"><div style="font-weight:600">${t2.speed} ${t('km')}/h</div><div style="color:#727c77;font-size:12px">${timeAgo(t2.at)}</div></div></div>`).join('');
+  const log = d.trackingLog.slice(0,15).map(l => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef0ec;font-size:12.5px"><div><div style="font-weight:500">${vehicleLabel(l.vehicleId)}</div><div style="color:#727c77">${l.location}</div></div><div style="text-align:end;color:#727c77">${l.speed} ${t('km')}/h</div></div>`).join('');
+  const alerts = computeAlerts().filter(a => a.view === 'tracking');
+  return pageHead(t('tracking_title'), t('tracking_sub', d.tracking.filter(x => x.status==='moving').length),
+    `<button class="btn-primary-sm" onclick="window.simulateTracking()">${icon('refresh',14)} ${t('update_locations')}</button>`) + `
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:20px;margin-bottom:20px">
+      <div class="card"><div class="card-head"><h3>${t('map')}</h3></div><div class="card-body"><div class="map">${pins}</div></div></div>
+      <div class="card"><div class="card-head"><h3>${t('current_locations')}</h3></div><div class="card-body" style="max-height:400px;overflow:auto">${live}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="card"><div class="card-head"><h3>${t('tracking_alerts')} (${alerts.length})</h3></div><div class="card-body">${alerts.length ? alerts.map(a => `<div style="padding:10px 0;border-bottom:1px solid #eef0ec"><div style="font-weight:500">${a.title}</div><div style="font-size:12px;color:#727c77">${a.text}</div></div>`).join('') : `<div style="padding:20px;text-align:center;color:#9aa39e">${t('no_alerts_short')}</div>`}</div></div>
+      <div class="card"><div class="card-head"><h3>${t('tracking_log')}</h3></div><div class="card-body" style="max-height:400px;overflow:auto">${log}</div></div>
+    </div>`;
+}
+
+window.simulateTracking = async () => {
+  const places = [
+    { name:'شارع الشيخ زايد — دبي', lat:25.2048, lng:55.2708, zone:null },
+    { name:'طريق الإمارات — دبي', lat:25.2048, lng:55.2708, zone:null },
+    { name:'الكورنيش — أبوظبي', lat:24.4539, lng:54.3773, zone:null },
+    { name:'مطار دبي الدولي', lat:25.2532, lng:55.3657, zone:'airport' },
+    { name:'مول الإمارات', lat:25.1181, lng:55.2003, zone:'mall' }
+  ];
+  const now = new Date().toISOString();
+  try {
+    for (const tr of state.data.tracking) {
+      const p = places[Math.floor(Math.random()*places.length)];
+      const speed = tr.status === 'moving' ? clamp(Math.round(40+Math.random()*80), 20, 120) : 0;
+      const u = { location:p.name, lat:p.lat, lng:p.lng, zone:p.zone, speed, at:now, parkedSince:p.zone?now:null };
+      await sbUpdate('tracking', tr.id, u);
+      Object.assign(tr, u);
+      const logRec = { id:uid('l'), vehicleId:tr.vehicleId, location:p.name, speed, status:tr.status, at:now };
+      await sbInsert('trackingLog', logRec);
+      state.data.trackingLog.unshift(logRec);
+    }
+    toast(t('updated')); await render();
+  } catch(e) { toast(e.message,'red'); }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Tasks
+   ═══════════════════════════════════════════════════════════════ */
+function taskRows() {
+  const s = q('tasks');
+  const list = state.data.tasks.filter(x => matchAny(s, x.title, x.driver, x.from, x.to, vehicleLabel(x.vehicleId))).sort((a,b) => b.startDate.localeCompare(a.startDate));
+  if (!list.length) return emptyRow(8, t('none'));
+  const today = todayISO();
+  return list.map(tk => {
+    const late = tk.status === 'scheduled' && tk.endDate < today;
+    const v = getVehicle(tk.vehicleId);
+    return `<tr>
+      <td><div style="font-weight:600">${tk.title}</div>${late?`<div style="color:#9a5750;font-size:11.5px">${t('task_late')}</div>`:''}</td>
+      <td>${v?v.make+' '+v.model:'—'}</td>
+      <td>${tk.driver}</td>
+      <td style="color:#727c77">${tk.from} ${icon('arrowLeft',12)} ${tk.to}</td>
+      <td>${fmtDate(tk.startDate)}</td>
+      <td>${tag(PRIORITY, tk.priority)}</td>
+      <td>${tag(TASK_STATUS, tk.status)}</td>
+      <td class="actions">
+        ${tk.status==='scheduled'?`<button class="icon-btn" onclick="window.startTask('${tk.id}')" title="${t('start')}">${icon('play',13)}</button>`:''}
+        ${tk.status==='running'?`<button class="icon-btn" onclick="window.doneTask('${tk.id}')" title="${t('finish')}">${icon('check',14)}</button>`:''}
+        <button class="icon-btn" onclick="window.editTask('${tk.id}')">${icon('edit',14)}</button>
+        <button class="icon-btn danger" onclick="window.deleteTask('${tk.id}')">${icon('trash',14)}</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTasks() {
+  return pageHead(t('tasks_title'), t('tasks_sub', state.data.tasks.length),
+    `<button class="btn-primary-sm" onclick="window.addTask()">${icon('plus',14)} ${t('add_task')}</button>`) + `
+    <div class="card"><div class="card-head"><div class="search-box">${icon('search',14)}<input placeholder="${t('search_placeholder')}" value="${esc(q('tasks'))}" oninput="window.searchDo('tasks',this.value)"></div></div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${t('task_title')}</th><th>${t('vehicle')}</th><th>${t('driver')}</th><th>${t('route')}</th><th>${t('period')}</th><th>${t('priority')}</th><th>${t('status')}</th><th></th></tr></thead><tbody id="tbody-tasks">${taskRows()}</tbody></table></div></div>`;
+}
+
+window.addTask = () => openModal({
+  title:t('add_task'), submitLabel:t('add'),
+  body:`<div class="grid-2">
+    ${field(t('task_title_label'),'title','',{required:true})}
+    ${vehicleSelect()}
+    ${field(t('driver'),'driver','')}
+    ${field(t('from'),'from','')}
+    ${field(t('to'),'to','')}
+    ${field(t('start_date'),'startDate',todayISO(),{type:'date'})}
+    ${field(t('end_date'),'endDate',todayISO(),{type:'date'})}
+    ${selectField(t('priority'),'priority',PRIORITY,'medium')}
+    ${selectField(t('status'),'status',TASK_STATUS,'scheduled')}
+  </div>`,
+  onSubmit: async fd => {
+    if (!fd.title?.trim()||!fd.vehicleId) { toast(t('complete_fields_required'),'red'); return false; }
+    const rec = { id:uid('k'), title:fd.title.trim(), vehicleId:fd.vehicleId, driver:fd.driver?.trim()||'—', from:fd.from?.trim()||'—', to:fd.to?.trim()||'—', startDate:fd.startDate, endDate:fd.endDate, priority:fd.priority, status:fd.status };
+    try { await sbInsert('tasks', rec); state.data.tasks.push(rec); toast(t('added')); await render(); }
+    catch(e) { toast(e.message,'red'); return false; }
+  }
+});
+
+window.editTask = id => {
+  const tk = state.data.tasks.find(x=>x.id===id); if (!tk) return;
+  openModal({ title:t('edit'), submitLabel:t('save'),
+    body:`<div class="grid-2">
+      ${field(t('task_title_label'),'title',tk.title,{required:true})}
+      ${vehicleSelect(tk.vehicleId)}
+      ${field(t('driver'),'driver',tk.driver)}
+      ${field(t('from'),'from',tk.from)}
+      ${field(t('to'),'to',tk.to)}
+      ${field(t('start_date'),'startDate',tk.startDate,{type:'date'})}
+      ${field(t('end_date'),'endDate',tk.endDate,{type:'date'})}
+      ${selectField(t('priority'),'priority',PRIORITY,tk.priority)}
+      ${selectField(t('status'),'status',TASK_STATUS,tk.status)}
+    </div>`,
+    onSubmit: async fd => {
+      const u = { title:fd.title.trim(), vehicleId:fd.vehicleId, driver:fd.driver?.trim()||'—', from:fd.from?.trim()||'—', to:fd.to?.trim()||'—', startDate:fd.startDate, endDate:fd.endDate, priority:fd.priority, status:fd.status };
+      try { await sbUpdate('tasks', id, u); Object.assign(tk, u); toast(t('updated')); await render(); }
+      catch(e) { toast(e.message,'red'); return false; }
+    }
+  });
+};
+
+window.startTask = async id => {
+  const tk = state.data.tasks.find(x=>x.id===id); if (!tk) return;
+  try { await sbUpdate('tasks', id, { status:'running' }); tk.status = 'running'; toast(t('updated')); await render(); }
+  catch(e) { toast(e.message,'red'); }
+};
+
+window.doneTask = async id => {
+  const tk = state.data.tasks.find(x=>x.id===id); if (!tk) return;
+  try { await sbUpdate('tasks', id, { status:'done' }); tk.status = 'done'; toast(t('updated')); await render(); }
+  catch(e) { toast(e.message,'red'); }
+};
+
+window.deleteTask = id => confirmDialog(t('delete'), t('confirm_delete'), async () => {
+  try { await sbDelete('tasks', id); state.data.tasks = state.data.tasks.filter(x=>x.id!==id); toast(t('deleted'),'red'); await render(); }
+  catch(e) { toast(e.message,'red'); }
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Requests
+   ═══════════════════════════════════════════════════════════════ */
+function requestRows() {
+  const s = q('requests');
+  const list = state.data.requests.filter(x => matchAny(s, x.description, x.requestedBy, vehicleLabel(x.vehicleId))).sort((a,b) => b.date.localeCompare(a.date));
+  if (!list.length) return emptyRow(7, t('none'));
+  return list.map(r => {
+    const v = getVehicle(r.vehicleId);
+    return `<tr>
+      <td><div style="font-weight:600">${v?v.make+' '+v.model:'—'}</div><div style="color:#727c77;font-size:12px">${v?v.plate:''}</div></td>
+      <td>${r.requestedBy}</td>
+      <td>${fmtDate(r.date)}</td>
+      <td>${r.description}</td>
+      <td>${tag(PRIORITY, r.priority)}</td>
+      <td>${tag(REQ_STATUS, r.status)}</td>
+      <td class="actions">
+        ${['new','review'].includes(r.status)?`<button class="icon-btn" onclick="window.approveReq('${r.id}')" title="${t('approve')}">${icon('check',14)}</button><button class="icon-btn danger" onclick="window.rejectReq('${r.id}')" title="${t('reject')}">${icon('x',14)}</button>`:''}
+        <button class="icon-btn" onclick="window.editReq('${r.id}')">${icon('edit',14)}</button>
+        <button class="icon-btn danger" onclick="window.deleteReq('${r.id}')">${icon('trash',14)}</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderRequests() {
+  const pending = state.data.requests.filter(r => ['new','review'].includes(r.status)).length;
+  return pageHead(t('requests_title'), t('requests_sub', state.data.requests.length, pending),
+    `<button class="btn-primary-sm" onclick="window.addReq()">${icon('plus',14)} ${t('add_request')}</button>`) + `
+    <div class="card"><div class="card-head"><div class="search-box">${icon('search',14)}<input placeholder="${t('search_placeholder')}" value="${esc(q('requests'))}" oninput="window.searchDo('requests',this.value)"></div></div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${t('vehicle')}</th><th>${t('requester')}</th><th>${t('date')}</th><th>${t('request_description')}</th><th>${t('priority')}</th><th>${t('status')}</th><th></th></tr></thead><tbody id="tbody-requests">${requestRows()}</tbody></table></div></div>`;
+}
+
+window.addReq = () => openModal({
+  title:t('add_request'), submitLabel:t('add'),
+  body:`<div class="grid-2">
+    ${vehicleSelect()}
+    ${field(t('requested_by'),'requestedBy','',{required:true})}
+    ${field(t('date'),'date',todayISO(),{type:'date'})}
+    ${selectField(t('priority'),'priority',PRIORITY,'medium')}
+    ${selectField(t('status'),'status',REQ_STATUS,'new')}
+    ${textareaField(t('problem_description'),'description','')}
+  </div>`,
+  onSubmit: async fd => {
+    if (!fd.vehicleId||!fd.requestedBy?.trim()||!fd.description?.trim()) { toast(t('complete_fields_required'),'red'); return false; }
+    const rec = { id:uid('r'), vehicleId:fd.vehicleId, requestedBy:fd.requestedBy.trim(), date:fd.date, priority:fd.priority, description:fd.description.trim(), status:fd.status };
+    try { await sbInsert('requests', rec); state.data.requests.push(rec); toast(t('added')); await render(); }
+    catch(e) { toast(e.message,'red'); return false; }
+  }
+});
+
+window.editReq = id => {
+  const r = state.data.requests.find(x=>x.id===id); if (!r) return;
+  openModal({ title:t('edit'), submitLabel:t('save'),
+    body:`<div class="grid-2">
+      ${vehicleSelect(r.vehicleId)}
+      ${field(t('requested_by'),'requestedBy',r.requestedBy,{required:true})}
+      ${field(t('date'),'date',r.date,{type:'date'})}
+      ${selectField(t('priority'),'priority',PRIORITY,r.priority)}
+      ${selectField(t('status'),'status',REQ_STATUS,r.status)}
+      ${textareaField(t('description'),'description',r.description)}
+    </div>`,
+    onSubmit: async fd => {
+      const u = { vehicleId:fd.vehicleId, requestedBy:fd.requestedBy.trim(), date:fd.date, priority:fd.priority, description:fd.description.trim(), status:fd.status };
+      try { await sbUpdate('requests', id, u); Object.assign(r, u); toast(t('updated')); await render(); }
+      catch(e) { toast(e.message,'red'); return false; }
+    }
+  });
+};
+
+window.approveReq = async id => {
+  const r = state.data.requests.find(x=>x.id===id); if (!r) return;
+  try {
+    await sbUpdate('requests', id, { status:'approved' });
+    r.status = 'approved';
+    const v = getVehicle(r.vehicleId);
+    const rec = {
+      id:uid('m'), requestNo:nextMaintNo(), vehicleId:r.vehicleId,
+      garageName:'—', garageAddress:'—', garageContactName:'—', garageContactPhone:'—',
+      maintenanceDate:todayISO(), deliveryDate:null, deliveryTime:null,
+      receiptDate:null, receiptTime:null, employeeName:'—', employeePhone:'—',
+      maintenanceType:'other', items:[{description:r.description,price:0,qty:1,discount:0}],
+      finalItems:[], notes:r.description, closeNotes:'', acknowledged:false,
+      attachments:{damaged:[],quote:[],replaced:[],invoice:[]},
+      odometer:v?.odometer||0, cost:0, status:'open', stage:'open', closedAt:null, requestId:r.id
+    };
+    await sbInsert('maintenance', rec);
+    state.data.maintenance.push(rec);
+    if (v) { await sbUpdate('vehicles', v.id, { status:'maintenance' }); v.status = 'maintenance'; }
+    toast(t('approve')); await render();
+  } catch(e) { toast(e.message,'red'); }
+};
+
+window.rejectReq = async id => {
+  const r = state.data.requests.find(x=>x.id===id); if (!r) return;
+  try { await sbUpdate('requests', id, { status:'rejected' }); r.status = 'rejected'; toast(t('reject'),'amber'); await render(); }
+  catch(e) { toast(e.message,'red'); }
+};
+
+window.deleteReq = id => confirmDialog(t('delete'), t('confirm_delete'), async () => {
+  try { await sbDelete('requests', id); state.data.requests = state.data.requests.filter(x=>x.id!==id); toast(t('deleted'),'red'); await render(); }
+  catch(e) { toast(e.message,'red'); }
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Violations
+   ═══════════════════════════════════════════════════════════════ */
+function violationRows() {
+  const s = q('violations'); const f = state.violationsFilter;
+  let list = state.data.violations.filter(vi => matchAny(s, vi.description, vi.location, vi.referenceNo, vi.driver, vehicleLabel(vi.vehicleId)));
+  if (f.type) list = list.filter(vi => vi.type === f.type);
+  if (f.status) list = list.filter(vi => vi.status === f.status);
+  list = list.sort((a,b) => b.date.localeCompare(a.date));
+  if (!list.length) return emptyRow(9, t('none'));
+  return list.map(vi => {
+    const v = getVehicle(vi.vehicleId);
+    return `<tr>
+      <td><div style="font-weight:600">${v?v.make+' '+v.model:'—'}</div><div style="color:#727c77;font-size:12px">${v?v.plate:''}</div></td>
+      <td>${vi.driver||'—'}</td>
+      <td>${tag(VIOLATION_TYPE, vi.type)}</td>
+      <td>${fmtDate(vi.date)}</td>
+      <td>${vi.description||'—'}</td>
+      <td style="font-family:monospace;font-size:12px">${vi.referenceNo||'—'}</td>
+      <td style="font-weight:600;color:${vi.status==='unpaid'?'#9a5750':'inherit'}">${money(vi.amount)}</td>
+      <td>${tag(VIOLATION_STATUS, vi.status)}</td>
+      <td class="actions">
+        ${vi.status==='unpaid'?`<button class="icon-btn" onclick="window.payViolation('${vi.id}')" title="${t('mark_paid')}">${icon('check',14)}</button>`:''}
+        <button class="icon-btn" onclick="window.editViolation('${vi.id}')">${icon('edit',14)}</button>
+        <button class="icon-btn danger" onclick="window.deleteViolation('${vi.id}')">${icon('trash',14)}</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderViolations() {
+  const all = state.data.violations;
+  const unpaid = all.filter(v => v.status === 'unpaid');
+  const paid = all.filter(v => v.status === 'paid');
+  const unpaidTotal = unpaid.reduce((s,v) => s + Number(v.amount||0), 0);
+  const paidTotal = paid.reduce((s,v) => s + Number(v.amount||0), 0);
+  const f = state.violationsFilter;
+  return pageHead(t('violations_title'), t('violations_sub', all.length, unpaid.length, money(unpaidTotal)),
+    `<button class="btn-primary-sm" onclick="window.addViolation()">${icon('plus',14)} ${t('add_violation')}</button>`) + `
+    <div class="stat-grid">
+      ${stat(t('salik'), all.filter(v => v.type === 'salik').length)}
+      ${stat(t('rta'), all.filter(v => v.type === 'rta').length)}
+      ${stat(t('violation_unpaid'), unpaid.length, money(unpaidTotal))}
+      ${stat(t('violation_paid'), paid.length, money(paidTotal))}
+    </div>
+    <div class="card"><div class="card-head">
+      <div class="search-box">${icon('search',14)}<input placeholder="${t('search_placeholder')}" value="${esc(q('violations'))}" oninput="window.searchDo('violations',this.value)"></div>
+      <div style="display:flex;gap:8px">
+        <select onchange="window.violFilter('type',this.value)" style="border:1px solid #e6e8e4;border-radius:8px;padding:7px 10px;font-family:inherit;font-size:13px;background:#fff">
+          <option value="">${t('all_types')}</option>
+          <option value="salik" ${f.type==='salik'?'selected':''}>${t('salik')}</option>
+          <option value="rta" ${f.type==='rta'?'selected':''}>${t('rta')}</option>
+        </select>
+        <select onchange="window.violFilter('status',this.value)" style="border:1px solid #e6e8e4;border-radius:8px;padding:7px 10px;font-family:inherit;font-size:13px;background:#fff">
+          <option value="">${t('all_statuses')}</option>
+          <option value="unpaid" ${f.status==='unpaid'?'selected':''}>${t('violation_unpaid')}</option>
+          <option value="paid" ${f.status==='paid'?'selected':''}>${t('violation_paid')}</option>
+        </select>
+      </div>
+    </div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${t('vehicle')}</th><th>${t('driver')}</th><th>${t('violation_type')}</th><th>${t('date')}</th><th>${t('description')}</th><th>${t('reference_no')}</th><th>${t('amount')}</th><th>${t('status')}</th><th></th></tr></thead><tbody id="tbody-violations">${violationRows()}</tbody></table></div></div>`;
+}
+
+window.violFilter = (k, v) => {
+  state.violationsFilter[k] = v;
+  const tbody = document.getElementById('tbody-violations');
+  if (tbody) tbody.innerHTML = violationRows();
+};
+
+window.addViolation = () => openModal({
+  title:t('add_violation'), submitLabel:t('add'),
+  body:`<div class="grid-2">
+    ${vehicleSelect()}
+    ${field(t('driver'),'driver','')}
+    ${selectField(t('violation_type'),'type',VIOLATION_TYPE,'salik')}
+    ${field(t('date'),'date',todayISO(),{type:'date',required:true})}
+    ${field(t('amount')+' ('+t('currency')+')','amount','',{type:'number',required:true})}
+    ${field(t('reference_no'),'referenceNo','')}
+    ${field(t('location'),'location','')}
+    ${selectField(t('status'),'status',VIOLATION_STATUS,'unpaid')}
+    ${textareaField(t('description'),'description','')}
+  </div>`,
+  onSubmit: async fd => {
+    if (!fd.vehicleId||!fd.date||!fd.amount) { toast(t('complete_fields_required'),'red'); return false; }
+    const rec = { id:uid('vi'), vehicleId:fd.vehicleId, driver:fd.driver?.trim()||'—', type:fd.type, date:fd.date, amount:+fd.amount, description:fd.description?.trim()||'', location:fd.location?.trim()||'', referenceNo:fd.referenceNo?.trim()||'', status:fd.status };
+    try { await sbInsert('violations', rec); state.data.violations.push(rec); toast(t('added')); await render(); }
+    catch(e) { toast(e.message,'red'); return false; }
+  }
+});
+
+window.editViolation = id => {
+  const vi = state.data.violations.find(x=>x.id===id); if (!vi) return;
+  openModal({ title:t('edit'), submitLabel:t('save'),
+    body:`<div class="grid-2">
+      ${vehicleSelect(vi.vehicleId)}
+      ${field(t('driver'),'driver',vi.driver)}
+      ${selectField(t('violation_type'),'type',VIOLATION_TYPE,vi.type)}
+      ${field(t('date'),'date',vi.date,{type:'date'})}
+      ${field(t('amount'),'amount',vi.amount,{type:'number'})}
+      ${field(t('reference_no'),'referenceNo',vi.referenceNo)}
+      ${field(t('location'),'location',vi.location)}
+      ${selectField(t('status'),'status',VIOLATION_STATUS,vi.status)}
+      ${textareaField(t('description'),'description',vi.description||'')}
+    </div>`,
+    onSubmit: async fd => {
+      const u = { vehicleId:fd.vehicleId, driver:fd.driver?.trim()||'—', type:fd.type, date:fd.date, amount:+fd.amount, description:fd.description?.trim()||'', location:fd.location?.trim()||'', referenceNo:fd.referenceNo?.trim()||'', status:fd.status };
+      try { await sbUpdate('violations', id, u); Object.assign(vi, u); toast(t('updated')); await render(); }
+      catch(e) { toast(e.message,'red'); return false; }
+    }
+  });
+};
+
+window.payViolation = async id => {
+  const vi = state.data.violations.find(x=>x.id===id); if (!vi) return;
+  try { await sbUpdate('violations', id, { status:'paid' }); vi.status = 'paid'; toast(t('updated')); await render(); }
+  catch(e) { toast(e.message,'red'); }
+};
+
+window.deleteViolation = id => confirmDialog(t('delete'), t('confirm_delete'), async () => {
+  try { await sbDelete('violations', id); state.data.violations = state.data.violations.filter(x=>x.id!==id); toast(t('deleted'),'red'); await render(); }
+  catch(e) { toast(e.message,'red'); }
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Documents
+   ═══════════════════════════════════════════════════════════════ */
+function documentRows() {
+  const s = q('documents');
+  const list = state.data.documents.filter(x => matchAny(s, x.name, x.number, x.issuer, vehicleLabel(x.vehicleId), DOC_TYPES[x.type]?.[0]));
+  if (!list.length) return emptyRow(7, t('none'));
+  return list.map(d => {
+    const v = getVehicle(d.vehicleId);
+    const days = daysUntil(d.expiryDate);
+    const st = days === null ? '—' : days < 0 ? `<span style="color:#9a5750">${t('doc_expired')}</span>` : days <= 30 ? `<span style="color:#8f7440">${days}d</span>` : `<span style="color:#5a7d63">${t('doc_valid')}</span>`;
+    return `<tr>
+      <td><div style="font-weight:600">${v?v.make+' '+v.model:'—'}</div><div style="color:#727c77;font-size:12px">${v?v.plate:''}</div></td>
+      <td>${tag(DOC_TYPES, d.type)}</td>
+      <td><div>${d.name||'—'}</div><div style="color:#727c77;font-size:12px">${d.number||''}</div></td>
+      <td>${fmtDate(d.issueDate)}</td>
+      <td>${fmtDate(d.expiryDate)}</td>
+      <td>${st}</td>
+      <td class="actions">
+        <button class="icon-btn" onclick="window.editDoc('${d.id}')">${icon('edit',14)}</button>
+        <button class="icon-btn danger" onclick="window.deleteDoc('${d.id}')">${icon('trash',14)}</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderDocuments() {
+  const docs = state.data.documents;
+  const expired = docs.filter(d => { const n = daysUntil(d.expiryDate); return n !== null && n < 0; }).length;
+  const expiring = docs.filter(d => { const n = daysUntil(d.expiryDate); return n !== null && n >= 0 && n <= 30; }).length;
+  return pageHead(t('documents_title'), t('documents_sub', docs.length, expiring, expired),
+    `<button class="btn-primary-sm" onclick="window.addDoc()">${icon('plus',14)} ${t('add_document')}</button>`) + `
+    <div class="stat-grid">
+      ${stat(t('doc_valid'), docs.length - expired - expiring)}
+      ${stat(t('doc_expiring'), expiring)}
+      ${stat(t('doc_expired'), expired)}
+    </div>
+    <div class="card"><div class="card-head"><div class="search-box">${icon('search',14)}<input placeholder="${t('search_placeholder')}" value="${esc(q('documents'))}" oninput="window.searchDo('documents',this.value)"></div></div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${t('vehicle')}</th><th>${t('type')}</th><th>${t('doc_name')}</th><th>${t('issue_date')}</th><th>${t('expiry_date')}</th><th>${t('status')}</th><th></th></tr></thead><tbody id="tbody-documents">${documentRows()}</tbody></table></div></div>`;
+}
+
+window.addDoc = () => openModal({
+  title:t('add_document'), submitLabel:t('add'),
+  body:`<div class="grid-2">
+    ${vehicleSelect()}
+    ${selectField(t('type'),'type',DOC_TYPES,'registration')}
+    ${field(t('doc_name'),'name','')}
+    ${field(t('doc_number'),'number','')}
+    ${field(t('issue_date'),'issueDate',todayISO(),{type:'date'})}
+    ${field(t('expiry_date'),'expiryDate','',{type:'date',required:true})}
+    ${field(t('issuer'),'issuer','')}
+    ${textareaField(t('notes'),'notes','')}
+  </div>`,
+  onSubmit: async fd => {
+    if (!fd.vehicleId||!fd.expiryDate) { toast(t('complete_fields_required'),'red'); return false; }
+    const rec = { id:uid('doc'), vehicleId:fd.vehicleId, type:fd.type, name:fd.name?.trim()||'', number:fd.number?.trim()||'', issueDate:fd.issueDate||null, expiryDate:fd.expiryDate, issuer:fd.issuer?.trim()||'', notes:fd.notes?.trim()||'' };
+    try { await sbInsert('documents', rec); state.data.documents.push(rec); toast(t('added')); await render(); }
+    catch(e) { toast(e.message,'red'); return false; }
+  }
+});
+
+window.editDoc = id => {
+  const d = state.data.documents.find(x=>x.id===id); if (!d) return;
+  openModal({ title:t('edit'), submitLabel:t('save'),
+    body:`<div class="grid-2">
+      ${vehicleSelect(d.vehicleId)}
+      ${selectField(t('type'),'type',DOC_TYPES,d.type)}
+      ${field(t('doc_name'),'name',d.name)}
+      ${field(t('doc_number'),'number',d.number)}
+      ${field(t('issue_date'),'issueDate',d.issueDate,{type:'date'})}
+      ${field(t('expiry_date'),'expiryDate',d.expiryDate,{type:'date'})}
+      ${field(t('issuer'),'issuer',d.issuer)}
+      ${textareaField(t('notes'),'notes',d.notes||'')}
+    </div>`,
+    onSubmit: async fd => {
+      const u = { vehicleId:fd.vehicleId, type:fd.type, name:fd.name?.trim()||'', number:fd.number?.trim()||'', issueDate:fd.issueDate||null, expiryDate:fd.expiryDate, issuer:fd.issuer?.trim()||'', notes:fd.notes?.trim()||'' };
+      try { await sbUpdate('documents', id, u); Object.assign(d, u); toast(t('updated')); await render(); }
+      catch(e) { toast(e.message,'red'); return false; }
+    }
+  });
+};
+
+window.deleteDoc = id => confirmDialog(t('delete'), t('confirm_delete'), async () => {
+  try { await sbDelete('documents', id); state.data.documents = state.data.documents.filter(x=>x.id!==id); toast(t('deleted'),'red'); await render(); }
+  catch(e) { toast(e.message,'red'); }
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Reports
+   ═══════════════════════════════════════════════════════════════ */
+function renderReports() {
+  const start = state.reportStart || monthStart();
+  const end = state.reportEnd || todayISO();
+  const inRange = d => d && d >= start && d <= end;
+  const fuel = state.data.fuel.filter(f => inRange(f.date));
+  const maint = state.data.maintenance.filter(m => m.status === 'closed' && inRange(m.maintenanceDate));
+  const viol = state.data.violations.filter(v => inRange(v.date));
+  const totalFuel = fuel.reduce((s,f) => s + Number(f.cost||0), 0);
+  const totalMaint = maint.reduce((s,m) => s + Number(m.cost||0), 0);
+  const totalViol = viol.reduce((s,v) => s + Number(v.amount||0), 0);
+  const grandTotal = totalFuel + totalMaint + totalViol;
+  const perVehicle = state.data.vehicles.map(v => {
+    const vFuel = fuel.filter(f => f.vehicleId === v.id).reduce((s,f) => s + Number(f.cost||0), 0);
+    const vMaint = maint.filter(m => m.vehicleId === v.id).reduce((s,m) => s + Number(m.cost||0), 0);
+    const vViol = viol.filter(x => x.vehicleId === v.id).reduce((s,x) => s + Number(x.amount||0), 0);
+    const vDist = (() => {
+      const vf = fuel.filter(f => f.vehicleId === v.id).sort((a,b) => a.date.localeCompare(b.date));
+      if (vf.length < 2) return 0;
+      return Math.max(0, (vf[vf.length-1].odometer||0) - (vf[0].odometer||0));
+    })();
+    const total = vFuel + vMaint + vViol;
+    return { vehicle: v, vFuel, vMaint, vViol, total, distance: vDist, costPerKm: vDist > 0 ? total/vDist : 0 };
+  }).sort((a,b) => b.total - a.total);
+  const maxPerVehicle = Math.max(...perVehicle.map(x => x.total), 1);
+  const bar = (label, value, max, cls) => `<div class="report-bar"><div style="color:#727c77">${label}</div><div style="background:#eef0ec;border-radius:4px;overflow:hidden;height:8px"><div class="fill ${cls||''}" style="width:${Math.max((value/max)*100,1)}%"></div></div><div style="font-weight:600;text-align:end">${money(value)}</div></div>`;
+
+  return pageHead(t('reports_title'), t('reports_sub', fmtDate(start), fmtDate(end)),
+    `<button class="btn-ghost" onclick="window.exportReportCSV()">${icon('download',14)} ${t('export_csv')}</button>`) + `
+    <div class="card"><div class="card-head"><h3>${t('period')}</h3></div>
+      <div class="card-body"><div class="report-filter">
+        <label class="field"><label>${t('from_date')}</label><input type="date" value="${start}" onchange="window.reportDate('start',this.value)"></label>
+        <label class="field"><label>${t('to_date')}</label><input type="date" value="${end}" onchange="window.reportDate('end',this.value)"></label>
+      </div></div>
+    </div>
+    <div class="stat-grid">
+      ${stat(t('fuel_cost'), fmtNum(Math.round(totalFuel)), t('currency'))}
+      ${stat(t('maintenance_cost'), fmtNum(Math.round(totalMaint)), t('currency'))}
+      ${stat(t('violations_cost'), fmtNum(Math.round(totalViol)), t('currency'))}
+      ${stat(t('total_label'), fmtNum(Math.round(grandTotal)), t('currency'))}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="card"><div class="card-head"><h3>${t('cost_distribution')}</h3></div>
+        <div class="card-body"><div class="report-bars">
+          ${bar(t('fuel_cost'), totalFuel, Math.max(totalFuel, totalMaint, totalViol, 1))}
+          ${bar(t('maintenance_cost'), totalMaint, Math.max(totalFuel, totalMaint, totalViol, 1), 'amber')}
+          ${bar(t('violations_cost'), totalViol, Math.max(totalFuel, totalMaint, totalViol, 1), 'red')}
+        </div></div>
+      </div>
+      <div class="card"><div class="card-head"><h3>${t('top5')}</h3></div>
+        <div class="card-body"><div class="report-bars">
+          ${perVehicle.slice(0,5).map(x => bar(x.vehicle.plate, x.total, maxPerVehicle)).join('')}
+        </div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-head"><h3>${t('vehicle_details')}</h3></div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr>
+      <th>${t('vehicle')}</th><th>${t('fuel_cost')}</th><th>${t('maintenance_cost')}</th><th>${t('violations_cost')}</th>
+      <th>${t('total_label')}</th><th>${t('distance')}</th><th>${t('cost_per_km')}</th>
+    </tr></thead><tbody>
+      ${perVehicle.map(x => `<tr class="clickable" onclick="window.openVehicle('${x.vehicle.id}')">
+        <td><div style="font-weight:600">${x.vehicle.make} ${x.vehicle.model}</div><div style="color:#727c77;font-size:12px">${x.vehicle.plate}</div></td>
+        <td>${money(x.vFuel)}</td>
+        <td>${money(x.vMaint)}</td>
+        <td style="color:${x.vViol>0?'#9a5750':'inherit'}">${money(x.vViol)}</td>
+        <td style="font-weight:600">${money(x.total)}</td>
+        <td>${x.distance > 0 ? fmtNum(x.distance) + ' ' + t('km') : '—'}</td>
+        <td>${x.costPerKm > 0 ? x.costPerKm.toFixed(2) : '—'}</td>
+      </tr>`).join('')}
+    </tbody></table></div></div>`;
+}
+
+window.reportDate = (k, v) => {
+  if (k === 'start') state.reportStart = v;
+  else state.reportEnd = v;
+  render();
+};
+
+window.exportReportCSV = () => {
+  const start = state.reportStart || monthStart();
+  const end = state.reportEnd || todayISO();
+  const fuel = state.data.fuel.filter(f => f.date >= start && f.date <= end);
+  const maint = state.data.maintenance.filter(m => m.status === 'closed' && m.maintenanceDate >= start && m.maintenanceDate <= end);
+  const viol = state.data.violations.filter(v => v.date >= start && v.date <= end);
+  const rows = state.data.vehicles.map(v => {
+    const vF = fuel.filter(f => f.vehicleId === v.id).reduce((s,f) => s + Number(f.cost||0), 0);
+    const vM = maint.filter(m => m.vehicleId === v.id).reduce((s,m) => s + Number(m.cost||0), 0);
+    const vV = viol.filter(x => x.vehicleId === v.id).reduce((s,x) => s + Number(x.amount||0), 0);
+    return [v.plate, v.make + ' ' + v.model, vF, vM, vV, vF+vM+vV];
+  });
+  exportCSV(`report-${start}-to-${end}.csv`, [t('plate'),t('vehicle'),t('fuel_cost'),t('maintenance_cost'),t('violations_cost'),t('total_label')], rows);
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   📊 Views — Users
+   ═══════════════════════════════════════════════════════════════ */
+async function renderUsers() {
+  if (!isAdmin()) return `<div style="padding:40px;text-align:center;color:#9a5750">${t('not_authorized')}</div>`;
+  let users = [];
+  try {
+    const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    users = data || [];
+  } catch(e) {
+    return `<div class="card"><div class="card-body" style="padding:40px;text-align:center;color:#9a5750">${esc(e.message)}</div></div>`;
+  }
+  const admins = users.filter(u => u.role === 'admin').length;
+  const myEmail = currentUser?.email;
+  const rows = users.length ? users.map(u => {
+    const isMe = u.email === myEmail;
+    return `<tr>
+      <td><div style="font-weight:600">${esc(u.full_name||'—')}</div><div style="color:#727c77;font-size:12px;direction:ltr">${esc(u.email||'')}</div></td>
+      <td>${u.role==='admin'?`<span style="color:#5a7d63;font-weight:500">${t('admin')}</span>`:`<span style="color:#727c77">${t('user')}</span>`}</td>
+      <td style="color:#727c77">${fmtDate((u.created_at||'').slice(0,10))}</td>
+      <td class="actions">${isMe ? `<span style="color:#9aa39e;font-size:11.5px">${t('you')}</span>` : `<button class="icon-btn" onclick="window.toggleRole('${u.id}','${u.role}')" title="${t('change_role')}">${icon('user',14)}</button>`}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="4" style="text-align:center;padding:30px;color:#727c77">${t('no_users')}</td></tr>`;
+  return pageHead(t('users_title'), t('users_sub', users.length, admins)) + `
+    <div class="card"><div class="card-head"><h3>${t('user_list')}</h3></div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${t('user')}</th><th>${t('role')}</th><th>${t('created_at')}</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+
+window.toggleRole = async (id, cur) => {
+  if (!isAdmin()) return toast(t('not_authorized'),'red');
+  const next = cur === 'admin' ? 'user' : 'admin';
+  try {
+    const { error } = await sb.from('profiles').update({ role: next }).eq('id', id);
+    if (error) throw error;
+    toast(t('role_changed') + ' ' + (next === 'admin' ? t('admin') : t('user')));
+    await render();
+  } catch(e) { toast(e.message,'red'); }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   📋 bodyRenderers — الجدول المحدّث
+   ═══════════════════════════════════════════════════════════════ */
+const bodyRenderers = {
+  vehicles: vehicleRows,
+  drivers: driverRows,
+  maintenance: maintenanceRows,
+  tasks: taskRows,
+  requests: requestRows,
+  violations: violationRows,
+  documents: documentRows,
+  fuel: fuelRows
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', attachAuthListeners);
+} else {
+  attachAuthListeners();
+}
+
+})();
+</script>
+</body>
+</html>
