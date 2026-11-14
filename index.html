@@ -974,17 +974,17 @@ const conv = {
     to: r => ({ 
       id: r.id, plate:r.plate, make:r.make, model:r.model, year:r.year, type:r.type, status:r.status, 
       odometer:r.odometer, tank:r.tank, fuel_level:r.fuelLevel, driver:r.driver, next_service_km:r.nextServiceKm,
-      tc_no: r.tcNo, owner: r.owner, nationality: r.nationality, registration_date: r.registrationDate || null,
-      registration_expiry: r.registrationExpiry || null, insurance_expiry: r.insuranceExpiry || null, policy_no: r.policyNo,
+      tc_no: r.tcNo, owner: r.owner, nationality: r.nationality, reg_date: r.registrationDate || null,
+      reg_expiry: r.registrationExpiry || null, ins_expiry: r.insuranceExpiry || null, policy_no: r.policyNo,
       passengers: r.passengers, origin: r.origin, color: r.color, gvw: r.gvw, empty_weight: r.emptyWeight,
-      engine_no: r.engineNo, chassis_no: r.chassisNo, created_at: r.createdAt
+      engine_no: r.engineNo, chassis_no: r.chassisNo
     }),
     from: r => ({ 
       id:r.id, plate:r.plate, make:r.make, model:r.model, year:r.year, type:r.type, status:r.status, 
       odometer:r.odometer, tank:r.tank, fuelLevel:r.fuel_level, driver:r.driver, nextServiceKm:r.next_service_km, 
       createdAt:r.created_at,
-      tcNo: r.tc_no, owner: r.owner, nationality: r.nationality, registrationDate: r.registration_date,
-      registrationExpiry: r.registration_expiry, insuranceExpiry: r.insurance_expiry, policyNo: r.policy_no,
+      tcNo: r.tc_no, owner: r.owner, nationality: r.nationality, registrationDate: r.reg_date,
+      registrationExpiry: r.reg_expiry, insuranceExpiry: r.ins_expiry, policyNo: r.policy_no,
       passengers: r.passengers, origin: r.origin, color: r.color, gvw: r.gvw, emptyWeight: r.empty_weight,
       engineNo: r.engine_no, chassisNo: r.chassis_no
     })
@@ -1812,7 +1812,6 @@ window.detailTab = t => { state.detailTab = t; render(); };
    🚗 Vehicle CRUD
    ═══════════════════════════════════════════════════════════════ */
 function vehicleForm(v) {
-function vehicleForm(v) {
   v = v || {};
   return `<div class="grid-2">
     ${field(t('make'),'make',v.make,{required:true})}
@@ -1843,21 +1842,6 @@ function vehicleForm(v) {
     ${field(t('engine_no'),'engineNo',v.engineNo)}
     ${field(t('chassis_no'),'chassisNo',v.chassisNo)}
   </div></div>`;
-}
-  v = v || {};
-  return `<div class="grid-2">
-    ${field(t('make'),'make',v.make,{required:true})}
-    ${field(t('model'),'model',v.model,{required:true})}
-    ${field(t('plate'),'plate',v.plate,{required:true})}
-    ${field(t('year'),'year',v.year??new Date().getFullYear(),{type:'number'})}
-    ${field(t('type'),'type',v.type)}
-    ${field(t('driver'),'driver',v.driver==='—'?'':v.driver)}
-    ${field(t('odometer'),'odometer',v.odometer??0,{type:'number',min:0})}
-    ${field(t('tank'),'tank',v.tank??70,{type:'number',min:1})}
-    ${field(t('fuel')+' %','fuelLevel',v.fuelLevel??50,{type:'number',min:0,max:100})}
-    ${field(t('next_service'),'nextServiceKm',v.nextServiceKm??0,{type:'number',min:0})}
-    ${selectField(t('status'),'status',VEHICLE_STATUS,v.status||'active')}
-  </div>`;
 }
 window.addVehicle = () => {
   if (!isAdmin()) return toast(t('not_authorized'),'red');
